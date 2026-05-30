@@ -125,8 +125,8 @@ J 压测与稳定性验收
 1. `schema-v2.sql` 容器初始化时插入 3 个种子用户：
    ```
    (1, '主播阿明', null, 'mock-token-seller-001')
-   (2, '买家张三', null, 'mock-token-buyer-001')
-   (3, '买家李四', null, 'mock-token-buyer-002')
+   (2, '买家张三', null, 'mock-token-user-001')
+   (3, '买家李四', null, 'mock-token-user-002')
    ```
 2. `POST /api/login` 桩逻辑（≤30 行）：
    - 收到 `{nickname, avatar}`。
@@ -260,11 +260,11 @@ curl http://localhost:8080/api/users/me -H "Authorization: Bearer mock-token-xxx
 
 ```powershell
 go test ./internal/auction/...
-curl -X POST http://localhost:8080/api/auctions -H "Authorization: Bearer mock-token-seller" -H "Content-Type: application/json" -d "{\"title\":\"天然翡翠吊坠\",\"start_price\":90000,\"price_step\":5000,\"start_time\":\"2026-05-29T20:00:00+08:00\",\"duration_seconds\":300}"
-curl -X PUT http://localhost:8080/api/auctions/1 -H "Authorization: Bearer mock-token-seller" -H "Content-Type: application/json" -d "{\"description\":\"和田玉籽料\",\"images\":[\"https://example.com/1.jpg\"],\"stream_url\":\"https://live.example.com/room/1.flv\"}"
+curl -X POST http://localhost:8080/api/auctions -H "Authorization: Bearer mock-token-seller-001" -H "Content-Type: application/json" -d "{\"title\":\"天然翡翠吊坠\",\"start_price\":90000,\"price_step\":5000,\"start_time\":\"2026-05-29T20:00:00+08:00\",\"duration_seconds\":300}"
+curl -X PUT http://localhost:8080/api/auctions/1 -H "Authorization: Bearer mock-token-seller-001" -H "Content-Type: application/json" -d "{\"description\":\"和田玉籽料\",\"images\":[\"https://example.com/1.jpg\"],\"stream_url\":\"https://live.example.com/room/1.flv\"}"
 curl http://localhost:8080/api/auctions
 curl http://localhost:8080/api/auctions/1
-curl -X POST http://localhost:8080/api/auctions/1/cancel -H "Authorization: Bearer mock-token-seller"
+curl -X POST http://localhost:8080/api/auctions/1/cancel -H "Authorization: Bearer mock-token-seller-001"
 ```
 
 预期：
@@ -320,7 +320,7 @@ curl -X POST http://localhost:8080/api/auctions/1/cancel -H "Authorization: Bear
 ```powershell
 go test ./internal/bid/...
 go test ./internal/bid/... -run Concurrent
-curl -X POST http://localhost:8080/api/auctions/1/bid -H "Authorization: Bearer mock-token-buyer" -H "Idempotency-Key: bid-demo-001" -H "Content-Type: application/json" -d "{\"amount\":95000}"
+curl -X POST http://localhost:8080/api/auctions/1/bid -H "Authorization: Bearer mock-token-user-001" -H "Idempotency-Key: bid-demo-001" -H "Content-Type: application/json" -d "{\"amount\":95000}"
 ```
 
 预期：
@@ -558,9 +558,9 @@ go test ./internal/worker/... -run Concurrent
 
 ```powershell
 go test ./internal/order/...
-curl http://localhost:8080/api/orders/mine -H "Authorization: Bearer mock-token-buyer"
-curl http://localhost:8080/api/orders/seller -H "Authorization: Bearer mock-token-seller"
-curl -X POST http://localhost:8080/api/orders/1/pay -H "Authorization: Bearer mock-token-buyer" -H "Idempotency-Key: pay-demo-001"
+curl http://localhost:8080/api/orders/mine -H "Authorization: Bearer mock-token-user-001"
+curl http://localhost:8080/api/orders/seller -H "Authorization: Bearer mock-token-seller-001"
+curl -X POST http://localhost:8080/api/orders/1/pay -H "Authorization: Bearer mock-token-user-001" -H "Idempotency-Key: pay-demo-001"
 ```
 
 预期：
@@ -605,7 +605,7 @@ curl -X POST http://localhost:8080/api/orders/1/pay -H "Authorization: Bearer mo
 
 ```powershell
 go test ./internal/upload/...
-curl -X POST http://localhost:8080/api/uploads -H "Authorization: Bearer mock-token-seller" -F "file=@./fixtures/product.jpg"
+curl -X POST http://localhost:8080/api/uploads -H "Authorization: Bearer mock-token-seller-001" -F "file=@./fixtures/product.jpg"
 ```
 
 预期：

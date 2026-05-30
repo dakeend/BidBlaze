@@ -27,7 +27,7 @@
 3. src/lib：api-client (axios + 拦截器)、auth (token + AuthContext)、time (server_time 偏移)
 4. types：用 openapi-typescript 从 docs/api/openapi.yaml 生成
 5. MSW handlers（src/mocks/handlers.ts）：
-   - POST /api/login → 按 nickname 返种子 token（mock-token-buyer-001 等）
+   - POST /api/login → 按 nickname 返种子 token（mock-token-user-001 等；卖家为 mock-token-seller-001）
    - GET /api/users/me、GET /api/auctions、GET /api/auctions/:id、GET /status
    - fixture 取自 openapi.yaml example 字段
 6. VITE_USE_MSW=true 默认开；每个模块切真接口时关掉对应 handler
@@ -44,7 +44,7 @@
 ```
 你正在帮我开发「直播竞拍系统」的实时层与移动端。技术栈：
 
-- 后端：Go 1.22 + gorilla/websocket（与 A 同一进程）
+- 后端：Go 1.26 + gorilla/websocket（与 A 同一进程）
 - 前端：现有脚手架为 React 19 + TypeScript 6 + Vite 8，移动端 H5（视口 375）
 - 状态：Zustand 或原生 hooks，不引入 Redux
 - WS 协议以 docs/contract-v2.md §3 为唯一来源
