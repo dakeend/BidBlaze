@@ -166,16 +166,17 @@ VITE_CLIENT_TYPE=mobile_h5     # admin-web 改为 admin
 mock-token-<role>-<user_id_padded>
 ```
 
-- `<role>` ∈ `{seller, buyer}`，**仅作语义提示，鉴权不依赖此字段**。
-- `<user_id_padded>`：用户 ID 用零补足至 3 位（>999 后自然增长，例 `mock-token-buyer-1024`）。
+- `<kind>` ∈ `{seller, user}`，**仅作语义提示，鉴权不依赖此字段**。卖家用 `seller`，其余（买家）统一用 `user`。
+  > 注意：token 段用 `user` 而非 `buyer`，与 `schema-v2.sql` seed、`contract-v2.md §2.1` 示例、`integration-test-plan.md` 保持一致。前端的「买家/卖家」角色是另一个概念（见 §5.2），不等同 token 段。
+- `<user_id_padded>`：用户 ID 用零补足至 3 位（>999 后自然增长，例 `mock-token-user-1024`）。
 - 大小写敏感，全小写。
 - 长度上限 64 字符（schema `users.token VARCHAR(128)` 兜底）。
 
 示例（与 `schema-v2.sql` seed 一致）：
 ```text
 mock-token-seller-001   → user_id=1 (主播阿明)
-mock-token-buyer-001    → user_id=2 (买家张三)
-mock-token-buyer-002    → user_id=3 (买家李四)
+mock-token-user-001     → user_id=2 (买家张三)
+mock-token-user-002     → user_id=3 (买家李四)
 ```
 
 ### 5.2 生成与持久化
@@ -184,12 +185,12 @@ mock-token-buyer-002    → user_id=3 (买家李四)
 1. 按 `nickname` 查 `users`。
 2. 若存在 → 直接返回旧 `token`。
 3. 若不存在：
-   - 当 `nickname` 以「主播」「商家」「卖家」开头 → `role=seller`；否则 `role=buyer`。
+   - 当 `nickname` 以「主播」「商家」「卖家」开头 → `role=seller`，token 段 `kind=seller`；否则 `role=buyer`，token 段 `kind=user`。
    - `INSERT users (nickname, avatar, token='__placeholder__')` 获取 `id`。
-   - `UPDATE users SET token = CONCAT('mock-token-', role, '-', LPAD(id, 3, '0')) WHERE id = ?`。
+   - `UPDATE users SET token = CONCAT('mock-token-', kind, '-', LPAD(id, 3, '0')) WHERE id = ?`（`kind` ∈ `{seller, user}`）。
    - 返回新 token。
 
-> 角色仅用于前端体验分流（PC 后台拒绝 buyer 登录），不写入业务规则。任何用户都可以创建拍卖、出价、拥有订单。
+> `role`（买家/卖家）仅用于前端体验分流（PC 后台拒绝买家登录），不写入业务规则，也不等同 token 段 `kind`（买家的 token 段是 `user`）。任何用户都可以创建拍卖、出价、拥有订单。
 
 ### 5.3 解析与鉴权
 
@@ -245,7 +246,7 @@ Start-Process powershell -ArgumentList "cd admin-web; npm.cmd install; npm.cmd r
 
 | 工具 | 版本 | 安装提示 |
 |---|---|---|
-| Go | 1.22.x | `go version` |
+| Go | 1.26.x（以 `server-go/go.mod` 的 `go` 指令为准） | `go version` |
 | Node | 20.x LTS | nvm-windows |
 | npm | Node 20 自带版本 | `npm -v` |
 | Docker Desktop | 4.30+ | Windows 需开 WSL2 |
@@ -265,7 +266,7 @@ Start-Process powershell -ArgumentList "cd admin-web; npm.cmd install; npm.cmd r
 - [ ] `cd server-go && go run .` 监听 8080
 - [ ] `curl http://localhost:8080/health` → `{"status":"ok"}`
 - [ ] `curl http://localhost:8080/ready` → mysql/redis 均 ok
-- [ ] `curl -X POST http://localhost:8080/api/login -d '{"nickname":"买家张三"}'` → 返回 `mock-token-buyer-001`（**B1 桩**）
+- [ ] `curl -X POST http://localhost:8080/api/login -d '{"nickname":"买家张三"}'` → 返回 `mock-token-user-001`（**B1 桩**）
 - [ ] `.env.example` 复制到 `.env` 即可跑
 - [ ] CORS 允许 5173/5174
 

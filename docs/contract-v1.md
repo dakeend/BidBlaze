@@ -1,4 +1,10 @@
-﻿# 直播竞拍系统 · 接口与协议合同 v1
+﻿> ⚠️ **DEPRECATED — 请勿使用。** 本文件（含其 A=前端/B=后端/C 维护合同的旧分工）已被
+> **`docs/contract-v2.md`** 取代。v2 的角色分工见 `docs/team-assignment.md`（Role A=后端核心 / B=实时+移动端 / C=PC 后台+打磨）。
+> 唯一接口事实源是 `contract-v2.md` + `docs/api/openapi.yaml`。保留本文件仅作历史参考。
+
+---
+
+# 直播竞拍系统 · 接口与协议合同 v1（DEPRECATED）
 
 > 本文件是 **A（前端）/ B（后端）共同依赖的合同**，由 C 维护。
 > 接口/字段有任何变动，C 必须先改本文，再通知 A、B。

@@ -4,7 +4,7 @@ Windows-friendly local setup for the live auction MVP.
 
 ## Prerequisites
 
-- Go 1.22+
+- Go 1.26+ (matches `server-go/go.mod`)
 - Node.js 20+
 - Docker Desktop with WSL2 enabled
 - PowerShell 5+
