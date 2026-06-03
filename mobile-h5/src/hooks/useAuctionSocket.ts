@@ -1,13 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getAuctionStatus, getEventsAfter, wsBaseUrl } from '../lib/api-client'
 import { getAuthToken } from '../lib/auth'
-import type { EventEnvelope } from '../lib/types'
+import { ConnectionManager } from '../lib/connection-manager'
+import type { ConnectionState, EventEnvelope } from '../lib/types'
 import { useAuctionStore } from '../store/auctionStore'
 
-const reconnectBackoff = [1000, 2000, 5000, 10000]
-const pollingAfterMs = 15_000
-const pollingIntervalMs = 2000
-const pingIntervalMs = 25_000
+type AuctionConnectionDebug = {
+  closeSocket: () => void
+  rejectReconnects: () => void
+  allowReconnects: () => void
+  forcePolling: () => void
+  reconnect: () => void
+  state: () => ConnectionState
+}
+
+declare global {
+  interface Window {
+    __auctionConnectionDebug?: AuctionConnectionDebug
+  }
+}
 
 function isEventEnvelope(value: unknown): value is EventEnvelope {
   if (!value || typeof value !== 'object') {
@@ -27,7 +38,7 @@ export function useAuctionSocket(auctionId: number) {
   const applyEvent = useAuctionStore((state) => state.applyEvent)
   const setConnectionState = useAuctionStore((state) => state.setConnectionState)
   const [lastError, setLastError] = useState<string | null>(null)
-  const manualReconnectRef = useRef<() => void>(() => undefined)
+  const managerRef = useRef<ConnectionManager | null>(null)
 
   const refreshSnapshot = useCallback(async () => {
     const snapshot = await getAuctionStatus(auctionId)
@@ -37,26 +48,6 @@ export function useAuctionSocket(auctionId: number) {
 
   useEffect(() => {
     let disposed = false
-    let socket: WebSocket | null = null
-    let reconnectTimer: number | null = null
-    let pingTimer: number | null = null
-    let pollingTimer: number | null = null
-    let reconnectAttempt = 0
-    let disconnectedAt = 0
-
-    const stopPing = () => {
-      if (pingTimer !== null) {
-        window.clearInterval(pingTimer)
-        pingTimer = null
-      }
-    }
-
-    const stopPolling = () => {
-      if (pollingTimer !== null) {
-        window.clearInterval(pollingTimer)
-        pollingTimer = null
-      }
-    }
 
     const compensate = async (afterSeq: number) => {
       let cursor = afterSeq
@@ -102,129 +93,55 @@ export function useAuctionSocket(auctionId: number) {
       applyEvent(event)
     }
 
-    const startPolling = () => {
-      if (pollingTimer !== null) {
-        return
-      }
-      setConnectionState('polling')
-      void refreshSnapshot()
-      pollingTimer = window.setInterval(() => {
-        void refreshSnapshot()
-      }, pollingIntervalMs)
-    }
-
-    const scheduleReconnect = () => {
-      if (disposed) {
-        return
-      }
-
-      if (disconnectedAt === 0) {
-        disconnectedAt = Date.now()
-      }
-
-      const offlineMs = Date.now() - disconnectedAt
-      if (offlineMs >= pollingAfterMs) {
-        startPolling()
-      } else {
-        setConnectionState('reconnecting')
-      }
-
-      const delay = reconnectBackoff[Math.min(reconnectAttempt, reconnectBackoff.length - 1)]
-      reconnectAttempt += 1
-      reconnectTimer = window.setTimeout(connect, delay)
-    }
-
-    const connect = () => {
-      if (disposed) {
-        return
-      }
-
-      stopPing()
-      if (socket) {
-        socket.onclose = null
-        socket.onerror = null
-        socket.close()
-      }
-
-      const lastSeq = useAuctionStore.getState().lastSeq
-      const url = `${wsBaseUrl()}/ws/auction/${auctionId}?token=${encodeURIComponent(
-        getAuthToken(),
-      )}&last_seq=${lastSeq}`
-
-      try {
-        socket = new WebSocket(url)
-      } catch (error) {
-        setLastError(error instanceof Error ? error.message : 'WebSocket 创建失败')
-        scheduleReconnect()
-        return
-      }
-
-      socket.onopen = () => {
-        reconnectAttempt = 0
-        disconnectedAt = 0
-        stopPolling()
-        setLastError(null)
-        setConnectionState('connected')
-        pingTimer = window.setInterval(() => {
-          if (socket?.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ type: 'ping', client_time: new Date().toISOString() }))
-          }
-        }, pingIntervalMs)
-      }
-
-      socket.onmessage = (message) => {
-        try {
-          const payload = JSON.parse(message.data)
-          if (isEventEnvelope(payload)) {
-            void handleServerEvent(payload)
-          }
-        } catch (error) {
-          setLastError(error instanceof Error ? error.message : 'WebSocket 消息解析失败')
+    const manager = new ConnectionManager({
+      buildUrl: () => {
+        const lastSeq = useAuctionStore.getState().lastSeq
+        return `${wsBaseUrl()}/ws/auction/${auctionId}?token=${encodeURIComponent(
+          getAuthToken(),
+        )}&last_seq=${lastSeq}`
+      },
+      refreshStatus: async () => {
+        await refreshSnapshot()
+      },
+      onMessage: (payload) => {
+        if (isEventEnvelope(payload)) {
+          void handleServerEvent(payload)
         }
-      }
+      },
+      onStateChange: setConnectionState,
+      onError: setLastError,
+    })
 
-      socket.onerror = () => {
-        setLastError('WebSocket 连接异常')
-      }
-
-      socket.onclose = () => {
-        stopPing()
-        if (!disposed) {
-          void refreshSnapshot()
-          scheduleReconnect()
-        }
-      }
+    managerRef.current = manager
+    const debugControls: AuctionConnectionDebug = {
+      closeSocket: () => manager.closeSocketForTest(),
+      rejectReconnects: () => manager.rejectReconnectsForTest(),
+      allowReconnects: () => manager.allowReconnectsForTest(),
+      forcePolling: () => manager.forcePollingForTest(),
+      reconnect: () => manager.reconnect(),
+      state: () => manager.getState(),
     }
 
-    manualReconnectRef.current = connect
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        void refreshSnapshot()
-      }
+    if (import.meta.env.DEV) {
+      window.__auctionConnectionDebug = debugControls
     }
 
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    void refreshSnapshot().finally(connect)
+    manager.start()
 
     return () => {
       disposed = true
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      stopPing()
-      stopPolling()
-      if (reconnectTimer !== null) {
-        window.clearTimeout(reconnectTimer)
+      manager.stop()
+      if (window.__auctionConnectionDebug === debugControls) {
+        delete window.__auctionConnectionDebug
       }
-      if (socket) {
-        socket.onclose = null
-        socket.onerror = null
-        socket.close()
+      if (managerRef.current === manager) {
+        managerRef.current = null
       }
     }
   }, [applyEvent, refreshSnapshot, auctionId, setConnectionState])
 
   return {
     lastError,
-    reconnect: () => manualReconnectRef.current(),
+    reconnect: () => managerRef.current?.reconnect(),
   }
 }
