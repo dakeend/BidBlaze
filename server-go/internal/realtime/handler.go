@@ -1,6 +1,7 @@
 package realtime
 
 import (
+	"errors"
 	"net/http"
 	"os"
 	"strconv"
@@ -65,6 +66,7 @@ func originAllowed(origin string, allowedOrigins []string) bool {
 
 func RegisterRoutes(router gin.IRoutes, hub *Hub) {
 	router.GET("/ws/auction/:id", hub.ServeAuction)
+	router.GET("/api/auctions/:id/events", hub.ServeEvents)
 }
 
 func (h *Hub) ServeAuction(c *gin.Context) {
@@ -99,4 +101,71 @@ func (h *Hub) ServeAuction(c *gin.Context) {
 	}
 	h.Register(client)
 	client.readPump()
+}
+
+func (h *Hub) ServeEvents(c *gin.Context) {
+	auctionID, err := parsePositiveInt64(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 1001, "msg": "invalid auction id", "data": nil})
+		return
+	}
+
+	afterSeq, err := parseRequiredNonNegativeInt64(c.Query("after_seq"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 1001, "msg": "invalid after_seq", "data": nil})
+		return
+	}
+
+	limit, err := parseOptionalLimit(c.Query("limit"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 1001, "msg": "invalid limit", "data": nil})
+		return
+	}
+
+	replay, err := h.provider.EventsAfter(c.Request.Context(), auctionID, afterSeq, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 9999, "msg": "internal error", "data": nil})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"msg":  "ok",
+		"data": gin.H{
+			"events":            replay.Events,
+			"has_more":          replay.HasMore,
+			"snapshot_required": replay.SnapshotRequired,
+			"server_time":       nowServerTime(),
+		},
+	})
+}
+
+func parsePositiveInt64(raw string) (int64, error) {
+	value, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || value <= 0 {
+		return 0, errors.New("invalid positive int64")
+	}
+	return value, nil
+}
+
+func parseRequiredNonNegativeInt64(raw string) (int64, error) {
+	if raw == "" {
+		return 0, errors.New("missing int64")
+	}
+	value, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || value < 0 {
+		return 0, errors.New("invalid non-negative int64")
+	}
+	return value, nil
+}
+
+func parseOptionalLimit(raw string) (int, error) {
+	if raw == "" {
+		return defaultReplayLimit, nil
+	}
+	value, err := strconv.Atoi(raw)
+	if err != nil || value <= 0 {
+		return 0, errors.New("invalid limit")
+	}
+	return normalizeReplayLimit(value), nil
 }

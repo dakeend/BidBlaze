@@ -121,7 +121,7 @@ func (h *Hub) room(ctx context.Context, auctionID int64) *Room {
 func (h *Hub) replayOrSnapshot(ctx context.Context, auctionID int64, lastSeq int64) []EventEnvelope {
 	if lastSeq > 0 {
 		replay, err := h.provider.EventsAfter(ctx, auctionID, lastSeq, defaultReplayLimit)
-		if err == nil && !replay.SnapshotRequired && len(replay.Events) > 0 {
+		if err == nil && !replay.SnapshotRequired && !replay.HasMore && len(replay.Events) > 0 {
 			return replay.Events
 		}
 	}

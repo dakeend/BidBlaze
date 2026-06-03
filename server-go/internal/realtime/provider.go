@@ -2,10 +2,15 @@ package realtime
 
 import "context"
 
-const defaultReplayLimit = 100
+const (
+	defaultReplayLimit            = 100
+	maxReplayLimit                = 500
+	defaultSnapshotRequiredWindow = 1000
+)
 
 type ReplayResult struct {
 	Events           []EventEnvelope
+	HasMore          bool
 	SnapshotRequired bool
 }
 

@@ -3,6 +3,7 @@ package realtime
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"sync"
@@ -155,6 +156,30 @@ func TestReplayFallsBackToSnapshot(t *testing.T) {
 	}
 }
 
+func TestReplayFallsBackToSnapshotWhenReplayHasMore(t *testing.T) {
+	hub := NewHub(&fakeProvider{
+		result: ReplayResult{
+			Events: []EventEnvelope{{
+				Type:       "bid_update",
+				EventID:    "evt_100",
+				AuctionID:  3,
+				Seq:        100,
+				ServerTime: nowServerTime(),
+				Data:       json.RawMessage(`{}`),
+			}},
+			HasMore: true,
+		},
+	})
+
+	events := hub.replayOrSnapshot(context.Background(), 3, 99)
+	if len(events) != 1 {
+		t.Fatalf("expected one snapshot event, got %d", len(events))
+	}
+	if events[0].Type != EventSnapshot {
+		t.Fatalf("expected snapshot, got %s", events[0].Type)
+	}
+}
+
 func TestServeAuctionSendsSnapshotThenPong(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -202,6 +227,103 @@ func TestServeAuctionSendsSnapshotThenPong(t *testing.T) {
 	}
 }
 
+func TestServeEventsReturnsReplayResult(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	provider := &fakeProvider{
+		result: ReplayResult{
+			Events: []EventEnvelope{{
+				Type:       "bid_update",
+				EventID:    "evt_11",
+				AuctionID:  1,
+				Seq:        11,
+				ServerTime: nowServerTime(),
+				Data:       json.RawMessage(`{"current_price":100}`),
+			}},
+			HasMore: true,
+		},
+	}
+	hub := NewHub(provider)
+
+	router := gin.New()
+	RegisterRoutes(router, hub)
+
+	request := httptest.NewRequest(http.MethodGet, "/api/auctions/1/events?after_seq=10&limit=999", nil)
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+	if provider.auctionID != 1 || provider.afterSeq != 10 || provider.limit != maxReplayLimit {
+		t.Fatalf("unexpected provider args: auction=%d after=%d limit=%d", provider.auctionID, provider.afterSeq, provider.limit)
+	}
+
+	var body struct {
+		Code int `json:"code"`
+		Data struct {
+			Events           []EventEnvelope `json:"events"`
+			HasMore          bool            `json:"has_more"`
+			SnapshotRequired bool            `json:"snapshot_required"`
+			ServerTime       string          `json:"server_time"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if body.Code != 0 || !body.Data.HasMore || body.Data.SnapshotRequired {
+		t.Fatalf("unexpected replay flags: %+v", body.Data)
+	}
+	if len(body.Data.Events) != 1 || body.Data.Events[0].Seq != 11 {
+		t.Fatalf("unexpected events: %+v", body.Data.Events)
+	}
+	if body.Data.ServerTime == "" {
+		t.Fatal("expected server_time")
+	}
+}
+
+func TestServeEventsRequiresAfterSeq(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	RegisterRoutes(router, NewHub(nil))
+
+	request := httptest.NewRequest(http.MethodGet, "/api/auctions/1/events", nil)
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", recorder.Code)
+	}
+}
+
+func TestServeEventsStaticProviderRequestsSnapshot(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	RegisterRoutes(router, NewHub(nil))
+
+	request := httptest.NewRequest(http.MethodGet, "/api/auctions/1/events?after_seq=10", nil)
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+
+	var body struct {
+		Data struct {
+			SnapshotRequired bool `json:"snapshot_required"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if !body.Data.SnapshotRequired {
+		t.Fatal("expected static provider to require snapshot")
+	}
+}
+
 func waitForEvent(t *testing.T, ch <-chan []byte, eventType string) EventEnvelope {
 	t.Helper()
 
@@ -220,6 +342,25 @@ func waitForEvent(t *testing.T, ch <-chan []byte, eventType string) EventEnvelop
 			t.Fatalf("timed out waiting for %s", eventType)
 		}
 	}
+}
+
+type fakeProvider struct {
+	result ReplayResult
+
+	auctionID int64
+	afterSeq  int64
+	limit     int
+}
+
+func (p *fakeProvider) Snapshot(_ context.Context, auctionID int64) (EventEnvelope, error) {
+	return newSnapshotEvent(auctionID, 0), nil
+}
+
+func (p *fakeProvider) EventsAfter(_ context.Context, auctionID int64, afterSeq int64, limit int) (ReplayResult, error) {
+	p.auctionID = auctionID
+	p.afterSeq = afterSeq
+	p.limit = limit
+	return p.result, nil
 }
 
 func readJSONMessage(t *testing.T, conn *websocket.Conn, v any) {
