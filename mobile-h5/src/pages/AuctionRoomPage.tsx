@@ -1,0 +1,252 @@
+import { useEffect, useMemo, useState } from 'react'
+import {
+  ArrowLeft,
+  Clock3,
+  Crown,
+  RefreshCw,
+  Send,
+  Users,
+  Video,
+  Wifi,
+  WifiOff,
+} from 'lucide-react'
+import heroImg from '../assets/hero.png'
+import { useAuctionSocket } from '../hooks/useAuctionSocket'
+import { useBidButton } from '../hooks/useBidButton'
+import { useServerTime } from '../hooks/useServerTime'
+import { formatMoney, formatRemaining, toServerMs } from '../lib/time'
+import { useAuctionStore } from '../store/auctionStore'
+
+type AuctionRoomPageProps = {
+  auctionId: number
+}
+
+function connectionText(state: string): string {
+  if (state === 'connected') {
+    return '已连接'
+  }
+  if (state === 'reconnecting') {
+    return '连接中'
+  }
+  if (state === 'polling') {
+    return '同步中'
+  }
+  return '已断开'
+}
+
+function connectionIcon(state: string) {
+  if (state === 'connected') {
+    return <Wifi size={15} aria-hidden="true" />
+  }
+  if (state === 'polling' || state === 'reconnecting') {
+    return <RefreshCw size={15} aria-hidden="true" />
+  }
+  return <WifiOff size={15} aria-hidden="true" />
+}
+
+function statusText(status: string | undefined): string {
+  if (status === 'active') {
+    return '竞拍中'
+  }
+  if (status === 'pending') {
+    return '未开始'
+  }
+  if (status === 'ended') {
+    return '已结束'
+  }
+  if (status === 'cancelled') {
+    return '已取消'
+  }
+  return '加载中'
+}
+
+export function AuctionRoomPage({ auctionId }: AuctionRoomPageProps) {
+  const auction = useAuctionStore((state) => state.auction)
+  const bids = useAuctionStore((state) => state.bids)
+  const viewerCount = useAuctionStore((state) => state.viewerCount)
+  const connectionState = useAuctionStore((state) => state.connectionState)
+  const ended = useAuctionStore((state) => state.ended)
+  const closeEndedModal = useAuctionStore((state) => state.closeEndedModal)
+  const { serverNow } = useServerTime(auctionId)
+  const { lastError, reconnect } = useAuctionSocket(auctionId)
+  const { buttonState, disabledReason, message, submitBid } = useBidButton(auctionId)
+  const [remainingMs, setRemainingMs] = useState(0)
+  const [bidAmount, setBidAmount] = useState<number | null>(null)
+
+  const minBidAmount = useMemo(() => {
+    if (!auction) {
+      return 0
+    }
+    if (auction.current_price > 0) {
+      return auction.current_price + auction.price_step
+    }
+    return Math.max(auction.start_price, auction.price_step)
+  }, [auction])
+
+  const bidAmountValue = bidAmount ?? minBidAmount
+
+  useEffect(() => {
+    let frame = 0
+
+    const tick = () => {
+      if (auction?.end_time) {
+        setRemainingMs(toServerMs(auction.end_time) - serverNow())
+      }
+      frame = window.requestAnimationFrame(tick)
+    }
+
+    tick()
+    return () => window.cancelAnimationFrame(frame)
+  }, [auction?.end_time, serverNow])
+
+  const submit = async () => {
+    const amount = Math.max(bidAmountValue, minBidAmount)
+    const result = await submitBid(amount)
+    if (!result.ok && result.nextAmount) {
+      setBidAmount(result.nextAmount)
+    }
+  }
+
+  const placeStepBid = () => {
+    setBidAmount(null)
+    void submitBid(minBidAmount)
+  }
+
+  return (
+    <main className="auction-shell">
+      <section className="auction-phone" aria-label="移动端拍卖直播间">
+        <header className="room-topbar">
+          <button className="icon-button" type="button" aria-label="返回" onClick={() => history.back()}>
+            <ArrowLeft size={20} aria-hidden="true" />
+          </button>
+          <div className="viewer-pill" aria-label="在线人数">
+            <Users size={15} aria-hidden="true" />
+            <span>{viewerCount || auction?.viewer_count || 0}</span>
+          </div>
+          <button className={`connection-pill ${connectionState}`} type="button" onClick={reconnect}>
+            {connectionIcon(connectionState)}
+            <span>{connectionText(connectionState)}</span>
+          </button>
+        </header>
+
+        <section className="live-stage">
+          {auction?.stream_url ? (
+            <video className="live-video" src={auction.stream_url} poster={heroImg} playsInline muted controls />
+          ) : (
+            <div className="live-placeholder">
+              <img src={heroImg} alt="拍卖商品直播占位画面" />
+              <div className="live-badge">
+                <Video size={16} aria-hidden="true" />
+                <span>直播占位</span>
+              </div>
+            </div>
+          )}
+
+          <div className="auction-overlay">
+            <div>
+              <span className="metric-label">当前价</span>
+              <strong>{formatMoney(auction?.current_price)}</strong>
+            </div>
+            <div>
+              <span className="metric-label">倒计时</span>
+              <strong className={remainingMs <= 10_000 ? 'urgent-time' : ''}>
+                {formatRemaining(remainingMs)}
+              </strong>
+            </div>
+            <div>
+              <span className="metric-label">领先者</span>
+              <strong className="leader-name">
+                {auction?.current_leader ? (
+                  <>
+                    <Crown size={15} aria-hidden="true" />
+                    {auction.current_leader.nickname}
+                  </>
+                ) : (
+                  '暂无'
+                )}
+              </strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="auction-info">
+          <div>
+            <p className="auction-status">{statusText(auction?.status)}</p>
+            <h1>{auction?.title ?? '加载拍卖中'}</h1>
+          </div>
+          <div className="time-card">
+            <Clock3 size={17} aria-hidden="true" />
+            <span>{auction?.end_time ? `结束 ${new Date(auction.end_time).toLocaleTimeString('zh-CN')}` : '校准中'}</span>
+          </div>
+        </section>
+
+        <section className="bid-feed" aria-label="出价记录">
+          <div className="section-title">
+            <span>出价记录</span>
+            <span>{bids.length} 条</span>
+          </div>
+          <div className="bid-list">
+            {bids.map((bid, index) => (
+              <article className="bid-row" key={bid.id} style={{ animationDelay: `${Math.min(index, 6) * 35}ms` }}>
+                <div>
+                  <strong>{bid.user.nickname}</strong>
+                  <span>{new Date(bid.created_at).toLocaleTimeString('zh-CN')}</span>
+                </div>
+                <b>{formatMoney(bid.amount)}</b>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <footer className="bid-dock">
+          {(message || lastError || disabledReason) && (
+            <p className={`dock-message ${lastError ? 'error' : ''}`}>{lastError || message || disabledReason}</p>
+          )}
+          <div className="bid-controls">
+            <label className="amount-field">
+              <span>出价金额</span>
+              <input
+                type="number"
+                min={minBidAmount}
+                step={auction?.price_step || 100}
+                value={bidAmountValue}
+                onChange={(event) => setBidAmount(Number(event.target.value))}
+              />
+            </label>
+            <button
+              className="step-button"
+              type="button"
+              disabled={Boolean(disabledReason)}
+              onClick={placeStepBid}
+            >
+              加一手
+            </button>
+          </div>
+          <button
+            className={`primary-bid ${buttonState}`}
+            type="button"
+            disabled={buttonState !== 'idle'}
+            onClick={submit}
+          >
+            <Send size={18} aria-hidden="true" />
+            <span>{buttonState === 'pending' ? '提交中' : disabledReason || '立即出价'}</span>
+          </button>
+        </footer>
+
+        {ended.open && (
+          <div className="modal-layer" role="dialog" aria-modal="true" aria-label="成交结果">
+            <div className="result-modal">
+              <span className="modal-kicker">拍卖结束</span>
+              <h2>{ended.winner ? `${ended.winner.nickname} 成交` : '本场流拍'}</h2>
+              <p>{ended.finalPrice ? `成交价 ${formatMoney(ended.finalPrice)}` : '暂无有效出价'}</p>
+              {ended.orderId && <p>订单号 {ended.orderId}</p>}
+              <button type="button" onClick={closeEndedModal}>
+                知道了
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
+    </main>
+  )
+}
