@@ -37,11 +37,17 @@ func main() {
 	// 进程存活检查，不访问外部依赖（contract-v2.md §2.7）。
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
 	// 就绪检查雏形。TODO(Task A): 真正探测 MySQL + Redis 后再返回 ok。
 	r.GET("/ready", func(c *gin.Context) {
+	// 就绪检查雏形。TODO(Task A): 真正探测 MySQL + Redis 后再返回 ok。
+	r.GET("/ready", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
+			"status": "ok",
+			"mysql":  "ok",
+			"redis":  "ok",
 			"status": "ok",
 			"mysql":  "ok",
 			"redis":  "ok",
