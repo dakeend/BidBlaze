@@ -1,0 +1,7 @@
+{
+  "seed": [
+    { "id": 1, "nickname": "主播阿明", "avatar": null, "token": "mock-token-seller-001", "role": "seller" },
+    { "id": 2, "nickname": "买家张三", "avatar": null, "token": "mock-token-user-001", "role": "buyer" },
+    { "id": 3, "nickname": "买家李四", "avatar": null, "token": "mock-token-user-002", "role": "buyer" }
+  ]
+}

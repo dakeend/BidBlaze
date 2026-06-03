@@ -1,6 +1,27 @@
-# Auction System
+# 直播竞拍系统 · Auction System
 
-Windows-friendly local setup for the live auction MVP.
+一个面向直播电商场景的**实时竞拍系统**：0 元起拍、毫秒级实时竞价、临近结束自动延时反超、封顶价自动成交。
+前端 mock-first 可独立跑通，无需后端在场。
+
+> Windows-friendly local setup for the live auction MVP.
+
+## 架构
+
+整体为 `server-go` 单体分层（HTTP API / WS Gateway / Domain Rules / Workers）+ MySQL 8 + Redis 7，
+前端分移动端 H5（买家）与 admin-web（商家后台/监控）。
+完整架构图、出价时序图、断线补偿时序图见 **[docs/presentation/architecture.md](docs/presentation/architecture.md)**。
+
+## 技术亮点
+
+- **出价正确性**：Redis 锁 + MySQL 条件更新（`current_price + step <= amount`）+ outbox，并发下不超卖、价格单调递增。
+- **0 元起拍 / 封顶自动成交**：规则收敛到可单测的 Domain 层。
+- **实时同步**：裸 WebSocket + 事件序号去重 + `/events` 补偿 + `/status` 快照（禁用 socket.io）。
+- **弱网恢复**：连接状态机（connected→reconnecting→polling）+ 退避重连，回前台必拉 `/status`。
+- **时间一致性**：倒计时用 `server_time` 偏移 + `requestAnimationFrame`，误差 ≤500ms。
+- **竞价氛围**：翻牌/领先/被超越/倒计时/延时/成交六类动画（framer-motion + Web Audio，60fps）。
+- **工程化**：openapi → TS 类型；MSW mock-first 让三人解耦并行，按 checklist 切真接口。
+
+完整答辩材料见下方 [答辩材料](#答辩材料)。
 
 ## Prerequisites
 
@@ -76,3 +97,15 @@ auction-system/
 - Role A starts in `server-go/` and `docs/tasks/backend-agent-tasks.md`.
 - Role B starts in `mobile-h5/` and the realtime/mobile sections of `docs/tasks/frontend-agent-tasks.md`.
 - Role C starts in `admin-web/` and the PC/admin sections of `docs/tasks/frontend-agent-tasks.md`.
+
+## 答辩材料
+
+| 材料 | 文件 |
+|---|---|
+| 架构图 / 出价时序 / 断线补偿 | [docs/presentation/architecture.md](docs/presentation/architecture.md) |
+| 演示视频分镜脚本（5 分钟） | [docs/presentation/demo-script.md](docs/presentation/demo-script.md) |
+| 技术亮点 PPT 大纲（10 页） | [docs/presentation/slides-outline.md](docs/presentation/slides-outline.md) |
+| AI 使用与落地效果报告 | [docs/ai-log/ai-contribution-report.md](docs/ai-log/ai-contribution-report.md) |
+| AI 协作日志（按日期） | [docs/ai-log/](docs/ai-log/) |
+
+> admin-web 模块说明见 [admin-web/README.md](admin-web/README.md)。
