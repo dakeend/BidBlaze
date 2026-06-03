@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"net/http"
+
+	"auction-system/server-go/internal/realtime"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
-// 这是 D1 之前的占位骨架，只提供契约对齐的 /health 与 /ready 雏形。
+// 这是 D1 之前的占位骨架，提供契约对齐的 /health、/ready 与 Role B 的 WS 网关骨架。
 // 完整实现见 docs/tasks/backend-agent-tasks.md「Task A」：
 //   - 统一响应结构 + 错误码（contract-v2.md §1.1/§1.2）
 //   - X-Request-Id 追踪 middleware
@@ -17,6 +20,10 @@ import (
 
 func main() {
 	r := gin.Default()
+	hub := realtime.NewHub(nil)
+	hubCtx, cancelHub := context.WithCancel(context.Background())
+	defer cancelHub()
+	go hub.Run(hubCtx)
 
 	// CORS 白名单按 dev-setup.md §2；生产用 CORS_ORIGINS 覆盖。
 	corsCfg := cors.DefaultConfig()
@@ -41,5 +48,9 @@ func main() {
 		})
 	})
 
-	r.Run(":8080")
+	realtime.RegisterRoutes(r, hub)
+
+	if err := r.Run(":8080"); err != nil {
+		panic(err)
+	}
 }
