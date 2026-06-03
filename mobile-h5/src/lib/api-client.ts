@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { type AxiosProgressEvent } from 'axios'
 import { getAuthToken, getCurrentUser } from './auth'
 import type {
   APIResponse,
@@ -6,6 +6,7 @@ import type {
   BidFailureData,
   BidSuccessData,
   EventListData,
+  UploadResult,
 } from './types'
 import { createMockBidResult, createMockSnapshot } from '../mocks/auction-fixture'
 
@@ -84,6 +85,30 @@ export async function placeBid(
       data,
     }
   }
+}
+
+export async function uploadImage(
+  file: File,
+  onProgress?: (progress: number) => void,
+): Promise<UploadResult> {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await apiClient.post<APIResponse<UploadResult>>('/api/uploads', formData, {
+    onUploadProgress: (event: AxiosProgressEvent) => {
+      if (!event.total) {
+        return
+      }
+      onProgress?.(Math.round((event.loaded / event.total) * 100))
+    },
+  })
+
+  if (response.data.code !== 0) {
+    throw new Error(response.data.msg || 'upload failed')
+  }
+
+  onProgress?.(100)
+  return response.data.data
 }
 
 export function wsBaseUrl(): string {

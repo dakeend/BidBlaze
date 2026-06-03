@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"auction-system/server-go/internal/realtime"
+	"auction-system/server-go/internal/upload"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -46,6 +47,8 @@ func main() {
 	})
 
 	realtime.RegisterRoutes(r, hub)
+	upload.RegisterRoutes(r, upload.NewHandlerFromEnv())
+	r.Static("/static", upload.StaticDirFromEnv())
 
 	if err := r.Run(":8080"); err != nil {
 		panic(err)

@@ -100,6 +100,13 @@ export type BidFailureData = {
   server_time?: string
 }
 
+export type UploadResult = {
+  url: string
+  width: number
+  height: number
+  size: number
+}
+
 export type ConnectionState = 'connected' | 'reconnecting' | 'polling' | 'disconnected'
 
 export type BidButtonState = 'idle' | 'pending' | 'cooldown' | 'disabled'
