@@ -60,6 +60,14 @@ export type EventEnvelope<TData = Record<string, unknown>> = {
   data: TData
 }
 
+export type RealtimeEventRecord = {
+  event: EventEnvelope
+  previousLeaderId: number | null
+  currentLeaderId: number | null
+  previousPrice: number | null
+  currentPrice: number | null
+}
+
 export type AuctionSnapshot = {
   auction: Auction
   top_bids: Bid[]

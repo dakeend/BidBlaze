@@ -11,6 +11,7 @@ import {
   WifiOff,
 } from 'lucide-react'
 import heroImg from '../assets/hero.png'
+import { useAuctionAlerts } from '../hooks/useAuctionAlerts'
 import { useAuctionSocket } from '../hooks/useAuctionSocket'
 import { useBidButton } from '../hooks/useBidButton'
 import { useServerTime } from '../hooks/useServerTime'
@@ -65,6 +66,7 @@ export function AuctionRoomPage({ auctionId }: AuctionRoomPageProps) {
   const bids = useAuctionStore((state) => state.bids)
   const viewerCount = useAuctionStore((state) => state.viewerCount)
   const connectionState = useAuctionStore((state) => state.connectionState)
+  const latestEvent = useAuctionStore((state) => state.lastRealtimeEvent)
   const ended = useAuctionStore((state) => state.ended)
   const closeEndedModal = useAuctionStore((state) => state.closeEndedModal)
   const { serverNow } = useServerTime(auctionId)
@@ -72,6 +74,12 @@ export function AuctionRoomPage({ auctionId }: AuctionRoomPageProps) {
   const { buttonState, disabledReason, message, submitBid } = useBidButton(auctionId)
   const [remainingMs, setRemainingMs] = useState(0)
   const [bidAmount, setBidAmount] = useState<number | null>(null)
+  const { alerts, criticalEnding, dismissAlert } = useAuctionAlerts({
+    latestEvent,
+    remainingMs,
+    endTime: auction?.end_time,
+    auctionStatus: auction?.status,
+  })
 
   const minBidAmount = useMemo(() => {
     if (!auction) {
@@ -129,7 +137,21 @@ export function AuctionRoomPage({ auctionId }: AuctionRoomPageProps) {
           </button>
         </header>
 
-        <section className="live-stage">
+        <div className="alert-stack" aria-live="polite" aria-atomic="false">
+          {alerts.map((alert) => (
+            <button
+              className={`auction-alert-toast ${alert.type}`}
+              key={alert.id}
+              type="button"
+              onClick={() => dismissAlert(alert.id)}
+              aria-label="关闭提醒"
+            >
+              {alert.message}
+            </button>
+          ))}
+        </div>
+
+        <section className={`live-stage ${criticalEnding ? 'critical-ending' : ''}`}>
           {auction?.stream_url ? (
             <video className="live-video" src={auction.stream_url} poster={heroImg} playsInline muted controls />
           ) : (

@@ -5,6 +5,7 @@ import type {
   Bid,
   ConnectionState,
   EventEnvelope,
+  RealtimeEventRecord,
   UserBrief,
 } from '../lib/types'
 
@@ -16,6 +17,7 @@ type AuctionRoomState = {
   seenEventIds: Set<string>
   connectionState: ConnectionState
   lastServerTime: string | null
+  lastRealtimeEvent: RealtimeEventRecord | null
   ended: {
     open: boolean
     winner: UserBrief | null
@@ -42,6 +44,7 @@ export const useAuctionStore = create<AuctionRoomState>((set, get) => ({
   seenEventIds: new Set(),
   connectionState: 'disconnected',
   lastServerTime: null,
+  lastRealtimeEvent: null,
   ended: {
     open: false,
     winner: null,
@@ -56,6 +59,7 @@ export const useAuctionStore = create<AuctionRoomState>((set, get) => ({
       lastSeq: snapshot.last_event_seq,
       seenEventIds: new Set(),
       lastServerTime: snapshot.server_time,
+      lastRealtimeEvent: null,
       ended: {
         open: snapshot.auction.status === 'ended',
         winner: snapshot.auction.current_leader,
@@ -110,11 +114,15 @@ export const useAuctionStore = create<AuctionRoomState>((set, get) => ({
         latest_bid?: Bid
         top_bids?: Bid[]
       }
+      const previousPrice = state.auction?.current_price ?? null
+      const currentPrice = data.current_price ?? previousPrice
+      const previousLeaderId = state.auction?.current_leader?.id ?? null
+      const currentLeaderId = data.current_leader?.id ?? previousLeaderId
       set({
         auction: state.auction
           ? {
               ...state.auction,
-              current_price: data.current_price ?? state.auction.current_price,
+              current_price: currentPrice ?? state.auction.current_price,
               current_leader: data.current_leader ?? state.auction.current_leader,
               bid_count: (state.auction.bid_count ?? 0) + (data.latest_bid ? 1 : 0),
             }
@@ -127,6 +135,13 @@ export const useAuctionStore = create<AuctionRoomState>((set, get) => ({
         lastSeq: event.seq,
         seenEventIds,
         lastServerTime: event.server_time,
+        lastRealtimeEvent: {
+          event,
+          previousLeaderId,
+          currentLeaderId,
+          previousPrice,
+          currentPrice,
+        },
       })
       return
     }
@@ -143,6 +158,13 @@ export const useAuctionStore = create<AuctionRoomState>((set, get) => ({
         lastSeq: event.seq,
         seenEventIds,
         lastServerTime: event.server_time,
+        lastRealtimeEvent: {
+          event,
+          previousLeaderId: state.auction?.current_leader?.id ?? null,
+          currentLeaderId: state.auction?.current_leader?.id ?? null,
+          previousPrice: state.auction?.current_price ?? null,
+          currentPrice: state.auction?.current_price ?? null,
+        },
       })
       return
     }
@@ -154,6 +176,13 @@ export const useAuctionStore = create<AuctionRoomState>((set, get) => ({
         lastSeq: event.seq,
         seenEventIds,
         lastServerTime: event.server_time,
+        lastRealtimeEvent: {
+          event,
+          previousLeaderId: state.auction?.current_leader?.id ?? null,
+          currentLeaderId: state.auction?.current_leader?.id ?? null,
+          previousPrice: state.auction?.current_price ?? null,
+          currentPrice: state.auction?.current_price ?? null,
+        },
       })
       return
     }
@@ -176,6 +205,13 @@ export const useAuctionStore = create<AuctionRoomState>((set, get) => ({
           finalPrice: data.final_price ?? null,
           orderId: data.order_id ?? null,
         },
+        lastRealtimeEvent: {
+          event,
+          previousLeaderId: state.auction?.current_leader?.id ?? null,
+          currentLeaderId: data.winner?.id ?? state.auction?.current_leader?.id ?? null,
+          previousPrice: state.auction?.current_price ?? null,
+          currentPrice: data.final_price ?? state.auction?.current_price ?? null,
+        },
       })
       return
     }
@@ -186,6 +222,13 @@ export const useAuctionStore = create<AuctionRoomState>((set, get) => ({
         lastSeq: event.seq,
         seenEventIds,
         lastServerTime: event.server_time,
+        lastRealtimeEvent: {
+          event,
+          previousLeaderId: state.auction?.current_leader?.id ?? null,
+          currentLeaderId: state.auction?.current_leader?.id ?? null,
+          previousPrice: state.auction?.current_price ?? null,
+          currentPrice: state.auction?.current_price ?? null,
+        },
       })
     }
   },

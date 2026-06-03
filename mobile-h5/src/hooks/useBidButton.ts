@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { getCurrentUserId } from '../lib/auth'
 import { placeBid } from '../lib/api-client'
+import { unlockAlertAudio } from '../lib/auction-audio'
 import { formatMoney } from '../lib/time'
 import type { BidButtonState, BidFailureData, BidSuccessData } from '../lib/types'
 import { useAuctionStore } from '../store/auctionStore'
@@ -65,6 +66,7 @@ export function useBidButton(auctionId: number) {
 
     setMessage(null)
     setPhase('pending')
+    void unlockAlertAudio()
 
     const response = await placeBid(auctionId, amount)
     if (response.code === 0 && isBidSuccess(response.data)) {
