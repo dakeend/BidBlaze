@@ -1,0 +1,39 @@
+x-backend: &backend
+  build:
+    context: ./server-go
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  depends_on:
+    mysql:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  environment:
+    APP_ENV: dev
+    APP_PORT: 8080
+    APP_TIMEZONE: Asia/Shanghai
+    MYSQL_DSN: root:auction_root@tcp(mysql:3306)/auction?parseTime=true&loc=UTC&charset=utf8mb4
+    MYSQL_MAX_OPEN: 50
+    MYSQL_MAX_IDLE: 10
+    REDIS_ADDR: redis:6379
+    REDIS_DB: 0
+    OUTBOX_POLL_INTERVAL_MS: 200
+    OUTBOX_BATCH_SIZE: 100
+    OUTBOX_MAX_RETRIES: 10
+    OUTBOX_REDIS_PREFIX: "auction:events:"
+    LIFECYCLE_TICK_MS: 200
+    LIFECYCLE_BATCH_SIZE: 100
+    LOG_LEVEL: info
+
+services:
+  server-a:
+    <<: *backend
+    container_name: auction-server-a
+    ports:
+      - "8080:8080"
+
+  server-b:
+    <<: *backend
+    container_name: auction-server-b
+    ports:
+      - "8081:8080"
