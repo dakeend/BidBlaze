@@ -1,24 +1,31 @@
 package main
 
 import (
+	"context"
+	"database/sql"
+	"log/slog"
 	"net/http"
+	"os"
+	"time"
+
+	"auction-system/server-go/internal/realtime"
+	"auction-system/server-go/internal/upload"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
 )
 
-// 这是 D1 之前的占位骨架，只提供契约对齐的 /health 与 /ready 雏形。
-// 完整实现见 docs/tasks/backend-agent-tasks.md「Task A」：
-//   - 统一响应结构 + 错误码（contract-v2.md §1.1/§1.2）
-//   - X-Request-Id 追踪 middleware
-//   - /ready 真正探测 MySQL + Redis
-//   - B1 mock login 桩 POST /api/login（dev-setup.md §5）
-// Role A 在 Task A 中按分层（handler/service/domain/repository）重建，不要在本文件堆业务逻辑。
-
 func main() {
-	r := gin.Default()
+	provider, closeProvider := newRealtimeProvider()
+	defer closeProvider()
 
-	// CORS 白名单按 dev-setup.md §2；生产用 CORS_ORIGINS 覆盖。
+	r := gin.Default()
+	hub := realtime.NewHub(provider)
+	hubCtx, cancelHub := context.WithCancel(context.Background())
+	defer cancelHub()
+	go hub.Run(hubCtx)
+
 	corsCfg := cors.DefaultConfig()
 	corsCfg.AllowOrigins = []string{"http://localhost:5173", "http://localhost:5174"}
 	corsCfg.AllowHeaders = []string{
@@ -27,12 +34,10 @@ func main() {
 	}
 	r.Use(cors.New(corsCfg))
 
-	// 进程存活检查，不访问外部依赖（contract-v2.md §2.7）。
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	// 就绪检查雏形。TODO(Task A): 真正探测 MySQL + Redis 后再返回 ok。
 	r.GET("/ready", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status": "ok",
@@ -41,5 +46,36 @@ func main() {
 		})
 	})
 
-	r.Run(":8080")
+	realtime.RegisterRoutes(r, hub)
+	upload.RegisterRoutes(r, upload.NewHandlerFromEnv())
+	r.Static("/static", upload.StaticDirFromEnv())
+
+	if err := r.Run(":8080"); err != nil {
+		panic(err)
+	}
+}
+
+func newRealtimeProvider() (realtime.Provider, func()) {
+	dsn := os.Getenv("MYSQL_DSN")
+	if dsn == "" {
+		return realtime.StaticProvider{}, func() {}
+	}
+
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		slog.Warn("mysql realtime provider disabled; falling back to static provider", "err", err)
+		return realtime.StaticProvider{}, func() {}
+	}
+
+	pingCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if err := db.PingContext(pingCtx); err != nil {
+		_ = db.Close()
+		slog.Warn("mysql realtime provider unavailable; falling back to static provider", "err", err)
+		return realtime.StaticProvider{}, func() {}
+	}
+
+	return realtime.NewOutboxProvider(db), func() {
+		_ = db.Close()
+	}
 }
