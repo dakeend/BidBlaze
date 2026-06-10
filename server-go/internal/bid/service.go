@@ -37,7 +37,17 @@ func (s *Service) Place(
 	requestID string,
 ) (Result, error) {
 	if auctionID <= 0 || amount <= 0 || idempotencyKey == "" || len(idempotencyKey) > 128 {
-		return Result{}, httpx.InvalidParam("出价参数或 Idempotency-Key 非法")
+		detail := "出价参数或 Idempotency-Key 非法"
+		if auctionID <= 0 {
+			detail = "拍卖 ID 非法"
+		} else if amount <= 0 {
+			detail = "出价金额必须大于 0"
+		} else if idempotencyKey == "" {
+			detail = "缺少 Idempotency-Key 请求头"
+		} else if len(idempotencyKey) > 128 {
+			detail = "Idempotency-Key 过长"
+		}
+		return Result{}, httpx.InvalidParam(detail)
 	}
 
 	scope := fmt.Sprintf("bid:%d", auctionID)

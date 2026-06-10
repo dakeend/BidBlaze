@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { getCurrentUserId } from '../lib/auth'
+import { getCurrentUser } from '../lib/auth'
 import { playAlertTone, unlockAlertAudio } from '../lib/auction-audio'
 import type { AuctionStatus, RealtimeEventRecord } from '../lib/types'
 
@@ -99,7 +99,7 @@ export function useAuctionAlerts({
     processedEventIdsRef.current.add(event.event_id)
 
     if (event.type === 'bid_update') {
-      const currentUserId = getCurrentUserId()
+      const currentUserId = getCurrentUser()?.id
       if (
         previousLeaderId === currentUserId &&
         currentLeaderId !== null &&

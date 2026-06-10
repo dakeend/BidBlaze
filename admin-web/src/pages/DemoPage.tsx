@@ -49,7 +49,7 @@ export function DemoPage() {
 
         <Col span={8}>
           <Card title="触发型动画" style={{ height: '100%' }}>
-            <Space direction="vertical" style={{ width: '100%' }}>
+            <Space orientation="vertical" style={{ width: '100%' }}>
               <Button danger block onClick={() => setOvertaken(true)}>
                 3 · 被超越闪红 + 震动
               </Button>

@@ -169,14 +169,14 @@ export function AuctionForm({ mode, initial, submitting, onSubmit }: Props) {
                 rules={[{ required: true, type: 'number', min: 0, message: '起拍价 ≥ 0' }]}
                 tooltip="支持 0 元起拍"
               >
-                <InputNumber min={0} precision={2} step={1} style={{ width: '100%' }} addonAfter="元" />
+                <InputNumber min={0} precision={2} step={1} style={{ width: '100%' }} suffix="元" />
               </Form.Item>
               {startPrice === 0 && (
                 <Alert
                   type="warning"
                   showIcon
                   style={{ marginBottom: 16 }}
-                  message="0 元起拍"
+                  title="0 元起拍"
                   description="将以「加价幅度」作为首笔最低有效价。"
                 />
               )}
@@ -185,7 +185,7 @@ export function AuctionForm({ mode, initial, submitting, onSubmit }: Props) {
                 name="price_step"
                 rules={[{ required: true, type: 'number', min: 0.01, message: '加价幅度必须 > 0' }]}
               >
-                <InputNumber min={0.01} precision={2} step={1} style={{ width: '100%' }} addonAfter="元" />
+                <InputNumber min={0.01} precision={2} step={1} style={{ width: '100%' }} suffix="元" />
               </Form.Item>
               <Form.Item
                 label="封顶价（元）"
@@ -207,14 +207,14 @@ export function AuctionForm({ mode, initial, submitting, onSubmit }: Props) {
                   precision={2}
                   step={1}
                   style={{ width: '100%' }}
-                  addonAfter="元"
+                  suffix="元"
                   placeholder="留空 = 无封顶"
                 />
               </Form.Item>
               <Alert
                 type="info"
                 showIcon
-                message={ceiling == null ? '当前：无封顶（价高者得）' : `当前封顶：${fmtYuan(ceiling)}`}
+                title={ceiling == null ? '当前：无封顶（价高者得）' : `当前封顶：${fmtYuan(ceiling)}`}
               />
             </Card>
           </Col>
@@ -248,14 +248,14 @@ export function AuctionForm({ mode, initial, submitting, onSubmit }: Props) {
                 rules={[{ required: true, type: 'number', min: 30, max: 86400, message: '30 ~ 86400 秒' }]}
                 tooltip="30 秒 ~ 24 小时"
               >
-                <InputNumber min={30} max={86400} step={30} style={{ width: '100%' }} addonAfter="秒" />
+                <InputNumber min={30} max={86400} step={30} style={{ width: '100%' }} suffix="秒" />
               </Form.Item>
               {estEnd && (
                 <Alert
                   type="info"
                   showIcon
                   style={{ marginBottom: 16 }}
-                  message={`预计结束：${estEnd.format('YYYY-MM-DD HH:mm:ss')}`}
+                  title={`预计结束：${estEnd.format('YYYY-MM-DD HH:mm:ss')}`}
                 />
               )}
               <Form.Item
@@ -264,7 +264,7 @@ export function AuctionForm({ mode, initial, submitting, onSubmit }: Props) {
                 rules={[{ required: true, type: 'number', min: 10, max: 30, message: '10 ~ 30 秒' }]}
                 tooltip="临近结束有人出价时，自动延长的秒数"
               >
-                <InputNumber min={10} max={30} style={{ width: '100%' }} addonAfter="秒" />
+                <InputNumber min={10} max={30} style={{ width: '100%' }} suffix="秒" />
               </Form.Item>
               <Form.Item
                 label="延时触发阈值（秒）"
@@ -272,7 +272,7 @@ export function AuctionForm({ mode, initial, submitting, onSubmit }: Props) {
                 rules={[{ required: true, type: 'number', min: 1, max: 300, message: '1 ~ 300 秒' }]}
                 tooltip="剩余时间 ≤ 此值时出价才触发延时"
               >
-                <InputNumber min={1} max={300} style={{ width: '100%' }} addonAfter="秒" />
+                <InputNumber min={1} max={300} style={{ width: '100%' }} suffix="秒" />
               </Form.Item>
             </Card>
           </Col>

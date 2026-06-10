@@ -61,7 +61,7 @@ export function AuctionEditPage() {
           type="warning"
           showIcon
           style={{ marginBottom: 16 }}
-          message="该拍卖已不是「未开始」状态，保存会被服务端拒绝。仅未开始的拍卖可修改。"
+          title="该拍卖已不是「未开始」状态，保存会被服务端拒绝。仅未开始的拍卖可修改。"
         />
       )}
       <AuctionForm mode="edit" initial={auction} submitting={submitting} onSubmit={onSubmit} />

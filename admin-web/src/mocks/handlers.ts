@@ -5,7 +5,8 @@ import usersFixture from '../../../fixtures/users.json'
 import auctionsFixture from '../../../fixtures/auctions.json'
 import type { Auction, Bid, Order, UserBrief } from '../lib/types'
 
-const API = (path: string) => `${import.meta.env.VITE_API_BASE || 'http://localhost:8080'}${path}`
+const apiBase = import.meta.env.VITE_API_BASE?.trim()
+const API = (path: string) => `${(apiBase ? apiBase.replace(/\/$/, '') : '')}${path}`
 
 const ok = <T>(data: T) => HttpResponse.json({ code: 0, msg: 'ok', data })
 const fail = (code: number, msg: string, httpStatus = 200, data: unknown = null) =>

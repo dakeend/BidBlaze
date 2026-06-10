@@ -33,3 +33,11 @@ coverage.out
 data/
 mysql-data/
 redis-data/
+.data/
+
+# node_modules backups
+node_modules.winbak*/
+
+# local uploads and videos
+server-go/uploads/
+video/

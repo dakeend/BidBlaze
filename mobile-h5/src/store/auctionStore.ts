@@ -52,10 +52,18 @@ export const useAuctionStore = create<AuctionRoomState>((set, get) => ({
     orderId: null,
   },
   applySnapshot: (snapshot) => {
+    const currentViewerCount = get().viewerCount
+    const currentConnectionState = get().connectionState
+    // 仅在初始加载或已断开时使用 DB 的 viewer_count，
+    // WebSocket 连接期间保持实时推送的人数，避免被 DB 旧值覆盖为 0。
+    const viewerCount =
+      currentConnectionState === 'connected' && currentViewerCount > 0
+        ? currentViewerCount
+        : snapshot.auction.viewer_count
     set({
       auction: snapshot.auction,
       bids: snapshot.top_bids,
-      viewerCount: snapshot.auction.viewer_count,
+      viewerCount,
       lastSeq: snapshot.last_event_seq,
       seenEventIds: new Set(),
       lastServerTime: snapshot.server_time,

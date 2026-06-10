@@ -52,9 +52,21 @@ export function setUnauthorizedHandler(fn: () => void): void {
 }
 
 const CLIENT_TYPE = import.meta.env.VITE_CLIENT_TYPE || 'admin'
+const apiBase = resolveApiBase()
+
+function resolveApiBase(): string {
+  const explicitBase = import.meta.env.VITE_API_BASE?.trim()
+  if (explicitBase) {
+    return explicitBase.replace(/\/$/, '')
+  }
+  if (import.meta.env.DEV) {
+    return ''
+  }
+  return 'http://localhost:8080'
+}
 
 export const http: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || 'http://localhost:8080',
+  baseURL: apiBase,
   timeout: 15000,
 })
 

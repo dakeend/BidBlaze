@@ -77,7 +77,7 @@ export function LoginPage() {
         <Alert
           type="info"
           showIcon
-          message={
+          title={
             <Text style={{ fontSize: 12 }}>
               卖家昵称以「主播 / 商家 / 卖家」开头；其它视为买家（买家请走移动端）。
             </Text>

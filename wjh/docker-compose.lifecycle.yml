@@ -1,6 +1,6 @@
 x-backend: &backend
   build:
-    context: ./server-go
+    context: ../server-go
     dockerfile: Dockerfile
   restart: unless-stopped
   depends_on:

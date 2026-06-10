@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { getCurrentUserId } from '../lib/auth'
-import { placeBid } from '../lib/api-client'
+import { getCurrentUser } from '../lib/auth'
+import { ApiCallError, placeBid } from '../lib/api-client'
 import { unlockAlertAudio } from '../lib/auction-audio'
 import { formatMoney } from '../lib/time'
 import type { BidButtonState, BidFailureData, BidSuccessData } from '../lib/types'
@@ -33,6 +33,7 @@ export function useBidButton(auctionId: number) {
   const [message, setMessage] = useState<string | null>(null)
 
   const disabledReason = useMemo(() => {
+    const user = getCurrentUser()
     if (!auction) {
       return '加载拍卖中'
     }
@@ -51,7 +52,7 @@ export function useBidButton(auctionId: number) {
     if (auction.status === 'cancelled') {
       return '拍卖已取消'
     }
-    if (auction.current_leader?.id === getCurrentUserId()) {
+    if (user && auction.current_leader?.id === user.id) {
       return '你已是领先者'
     }
     return null
@@ -60,39 +61,52 @@ export function useBidButton(auctionId: number) {
   const buttonState: BidButtonState = disabledReason ? 'disabled' : phase
 
   const submitBid = async (amount: number) => {
+    if (!auction || !auction.id) {
+      return { ok: false, message: '拍卖数据加载中' }
+    }
     if (disabledReason || phase === 'pending') {
       return { ok: false, message: disabledReason ?? '当前不可出价' }
+    }
+    if (amount <= 0) {
+      return { ok: false, message: '出价金额必须大于 0' }
     }
 
     setMessage(null)
     setPhase('pending')
     void unlockAlertAudio()
 
-    const response = await placeBid(auctionId, amount)
-    if (response.code === 0 && isBidSuccess(response.data)) {
-      applyBidResponse(
-        response.data.bid,
-        response.data.current_price,
-        response.data.current_leader,
-        response.data.server_time,
-      )
-      setPhase('cooldown')
-      window.setTimeout(() => setPhase('idle'), 1000)
-      setMessage('出价已提交')
-      return { ok: true, message: '出价已提交' }
-    }
+    try {
+      const response = await placeBid(auctionId, amount)
+      if (response.code === 0 && isBidSuccess(response.data)) {
+        applyBidResponse(
+          response.data.bid,
+          response.data.current_price,
+          response.data.current_leader,
+          response.data.server_time,
+        )
+        setPhase('cooldown')
+        window.setTimeout(() => setPhase('idle'), 1000)
+        setMessage('出价已提交')
+        return { ok: true, message: '出价已提交' }
+      }
 
-    const data = response.data as BidFailureData | null
-    const nextMessage = failureMessage(response.code, data)
-    setMessage(nextMessage)
-    setPhase(response.code === 1004 ? 'cooldown' : 'idle')
-    if (response.code === 1004) {
-      window.setTimeout(() => setPhase('idle'), 1000)
-    }
-    return {
-      ok: false,
-      message: nextMessage,
-      nextAmount: data?.min_acceptable_amount,
+      const data = response.data as BidFailureData | null
+      const nextMessage = failureMessage(response.code, data)
+      setMessage(nextMessage)
+      setPhase(response.code === 1004 ? 'cooldown' : 'idle')
+      if (response.code === 1004) {
+        window.setTimeout(() => setPhase('idle'), 1000)
+      }
+      return {
+        ok: false,
+        message: nextMessage,
+        nextAmount: data?.min_acceptable_amount,
+      }
+    } catch (err) {
+      const nextMessage = err instanceof ApiCallError ? err.message : '网络错误，请稍后重试'
+      setMessage(nextMessage)
+      setPhase('idle')
+      return { ok: false, message: nextMessage }
     }
   }
 

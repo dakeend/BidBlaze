@@ -11,7 +11,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (!ready) {
     return (
       <div style={{ display: 'grid', placeItems: 'center', height: '100vh' }}>
-        <Spin size="large" tip="加载中..." />
+        <Spin size="large" description="加载中..." />
       </div>
     )
   }

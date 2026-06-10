@@ -1,7 +1,7 @@
 // PC 直播间监控页（P5）。只读视图，轮询 /status（联调后可替换为共享 useAuctionSocket）。
 // 实时：当前价 / leader / 出价流 / viewer_count / 剩余时间；卖家可一键取消（active）。
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Card, Row, Col, Statistic, Button, List, Avatar, Tag, Typography, App, Result } from 'antd'
+import { Card, Row, Col, Statistic, Button, Avatar, Tag, Typography, App, Result } from 'antd'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api, ApiError } from '../lib/api-client'
@@ -12,6 +12,7 @@ import { LeaderBadge } from '../components/atmosphere/LeaderBadge'
 import { CountdownPulse } from '../components/atmosphere/CountdownPulse'
 import { ExtendShock } from '../components/atmosphere/ExtendShock'
 import { WinConfetti } from '../components/atmosphere/WinConfetti'
+import heroImg from '../assets/hero.png'
 import type { AuctionSnapshot } from '../lib/types'
 
 export function MonitorPage() {
@@ -94,6 +95,79 @@ export function MonitorPage() {
         </div>
       </div>
 
+      {/* 直播画面区 */}
+      <Card
+        style={{ marginBottom: 16, overflow: 'hidden', padding: 0 }}
+        bodyStyle={{ padding: 0, position: 'relative' }}
+      >
+        <div style={{ position: 'relative', width: '100%', height: 320, background: '#1a1a2e', overflow: 'hidden' }}>
+          {a.stream_url ? (
+            <video src={a.stream_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} playsInline muted controls />
+          ) : (
+            <>
+              <img
+                src={heroImg}
+                alt="直播占位画面"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7 }}
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 12,
+                  left: 12,
+                  background: 'rgba(220,38,38,0.85)',
+                  color: '#fff',
+                  padding: '2px 10px',
+                  borderRadius: 4,
+                  fontSize: 12,
+                  fontWeight: 700,
+                }}
+              >
+                🔴 LIVE 占位
+              </div>
+            </>
+          )}
+          {/* 数据叠层 */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+              padding: '16px 20px',
+              background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+              color: '#fff',
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>当前价</div>
+              <div style={{ fontSize: 24, fontWeight: 900 }}>{centsToYuanStr(a.current_price)}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>剩余时间</div>
+              <div style={{ fontSize: 24, fontWeight: 900 }}>
+                {isActive ? <CountdownPulse endTime={a.end_time} sound={false} /> : '—'}
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>领先者</div>
+              <div style={{ fontSize: 20, fontWeight: 800 }}>
+                {a.current_leader ? (
+                  <>
+                    <span style={{ color: '#fbbf24', marginRight: 4 }}>👑</span>
+                    {a.current_leader.nickname}
+                  </>
+                ) : (
+                  '暂无'
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+
       <Row gutter={16}>
         <Col span={8}>
           <Card title="当前价">
@@ -127,24 +201,45 @@ export function MonitorPage() {
       </Row>
 
       <Card title="出价流" style={{ marginTop: 16 }}>
-        <List
-          dataSource={snap.top_bids}
-          locale={{ emptyText: '暂无出价' }}
-          renderItem={(b) => (
-            <AnimatePresence key={b.id}>
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={<Avatar src={b.user.avatar || undefined}>{b.user.nickname.slice(0, 1)}</Avatar>}
-                    title={b.user.nickname}
-                    description={centsToYuanStr(b.amount)}
-                  />
+        {snap.top_bids.length === 0 ? (
+          <Typography.Text type="secondary">暂无出价</Typography.Text>
+        ) : (
+          <div style={{ display: 'grid' }}>
+            <AnimatePresence initial={false}>
+              {snap.top_bids.map((b) => (
+                <motion.div
+                  key={b.id}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 16,
+                    padding: '12px 0',
+                    borderBottom: '1px solid #f0f0f0',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', minWidth: 0, gap: 12 }}>
+                    <Avatar src={b.user.avatar || undefined}>{b.user.nickname.slice(0, 1)}</Avatar>
+                    <div style={{ minWidth: 0 }}>
+                      <Typography.Text strong ellipsis>
+                        {b.user.nickname}
+                      </Typography.Text>
+                      <div style={{ display: 'flex', gap: 12 }}>
+                        <Typography.Text type="secondary">{centsToYuanStr(b.amount)}</Typography.Text>
+                        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                          {new Date(b.created_at).toLocaleTimeString('zh-CN')}
+                        </Typography.Text>
+                      </div>
+                    </div>
+                  </div>
                   <Tag color={b.status === 'accepted' ? 'success' : 'error'}>{b.status}</Tag>
-                </List.Item>
-              </motion.div>
+                </motion.div>
+              ))}
             </AnimatePresence>
-          )}
-        />
+          </div>
+        )}
       </Card>
 
       <ExtendShock show={extendShow} seconds={a.extend_seconds} onClose={() => setExtendShow(false)} />

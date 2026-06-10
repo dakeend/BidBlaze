@@ -15,11 +15,14 @@ import { useAuctionAlerts } from '../hooks/useAuctionAlerts'
 import { useAuctionSocket } from '../hooks/useAuctionSocket'
 import { useBidButton } from '../hooks/useBidButton'
 import { useServerTime } from '../hooks/useServerTime'
+import { ApiCallError, payOrder } from '../lib/api-client'
+import { getCurrentUser } from '../lib/auth'
 import { formatMoney, formatRemaining, toServerMs } from '../lib/time'
 import { useAuctionStore } from '../store/auctionStore'
 
 type AuctionRoomPageProps = {
   auctionId: number
+  onBack?: () => void
 }
 
 function connectionText(state: string): string {
@@ -61,7 +64,7 @@ function statusText(status: string | undefined): string {
   return '加载中'
 }
 
-export function AuctionRoomPage({ auctionId }: AuctionRoomPageProps) {
+export function AuctionRoomPage({ auctionId, onBack }: AuctionRoomPageProps) {
   const auction = useAuctionStore((state) => state.auction)
   const bids = useAuctionStore((state) => state.bids)
   const viewerCount = useAuctionStore((state) => state.viewerCount)
@@ -81,6 +84,9 @@ export function AuctionRoomPage({ auctionId }: AuctionRoomPageProps) {
     auctionStatus: auction?.status,
   })
 
+  const fenToYuan = (fen: number) => fen / 100
+  const yuanToFen = (yuan: number) => Math.round(yuan * 100)
+
   const minBidAmount = useMemo(() => {
     if (!auction) {
       return 0
@@ -91,7 +97,8 @@ export function AuctionRoomPage({ auctionId }: AuctionRoomPageProps) {
     return Math.max(auction.start_price, auction.price_step)
   }, [auction])
 
-  const bidAmountValue = bidAmount ?? minBidAmount
+  // bidAmount 存储分，bidAmountValue 也是分，输入框用元
+  const bidAmountFen = bidAmount ?? minBidAmount
 
   useEffect(() => {
     let frame = 0
@@ -108,7 +115,7 @@ export function AuctionRoomPage({ auctionId }: AuctionRoomPageProps) {
   }, [auction?.end_time, serverNow])
 
   const submit = async () => {
-    const amount = Math.max(bidAmountValue, minBidAmount)
+    const amount = Math.max(bidAmountFen, minBidAmount)
     const result = await submitBid(amount)
     if (!result.ok && result.nextAmount) {
       setBidAmount(result.nextAmount)
@@ -120,11 +127,27 @@ export function AuctionRoomPage({ auctionId }: AuctionRoomPageProps) {
     void submitBid(minBidAmount)
   }
 
+  const [paying, setPaying] = useState(false)
+  const [paid, setPaid] = useState(false)
+  const currentUser = getCurrentUser()
+
+  const handlePay = async () => {
+    if (!ended.orderId) return
+    setPaying(true)
+    try {
+      await payOrder(ended.orderId)
+      setPaid(true)
+    } catch (err) {
+      // ignore — 可以重试
+    } finally {
+      setPaying(false)
+    }
+  }
+
   return (
-    <main className="auction-shell">
-      <section className="auction-phone" aria-label="移动端拍卖直播间">
-        <header className="room-topbar">
-          <button className="icon-button" type="button" aria-label="返回" onClick={() => history.back()}>
+    <>
+      <header className="room-topbar">
+          <button className="icon-button" type="button" aria-label="返回" onClick={() => onBack?.()}>
             <ArrowLeft size={20} aria-hidden="true" />
           </button>
           <div className="viewer-pill" aria-label="在线人数">
@@ -229,10 +252,10 @@ export function AuctionRoomPage({ auctionId }: AuctionRoomPageProps) {
               <span>出价金额</span>
               <input
                 type="number"
-                min={minBidAmount}
-                step={auction?.price_step || 100}
-                value={bidAmountValue}
-                onChange={(event) => setBidAmount(Number(event.target.value))}
+                min={fenToYuan(minBidAmount)}
+                step={fenToYuan(auction?.price_step || 100)}
+                value={fenToYuan(bidAmountFen)}
+                onChange={(event) => setBidAmount(yuanToFen(Number(event.target.value)))}
               />
             </label>
             <button
@@ -262,13 +285,18 @@ export function AuctionRoomPage({ auctionId }: AuctionRoomPageProps) {
               <h2>{ended.winner ? `${ended.winner.nickname} 成交` : '本场流拍'}</h2>
               <p>{ended.finalPrice ? `成交价 ${formatMoney(ended.finalPrice)}` : '暂无有效出价'}</p>
               {ended.orderId && <p>订单号 {ended.orderId}</p>}
+              {paid && <p style={{ color: '#10b981', fontWeight: 800 }}>✅ 支付成功</p>}
+              {ended.winner && currentUser && ended.winner.id === currentUser.id && ended.orderId && !paid && (
+                <button type="button" onClick={handlePay} disabled={paying}>
+                  {paying ? '支付中...' : '💳 立即支付'}
+                </button>
+              )}
               <button type="button" onClick={closeEndedModal}>
-                知道了
+                {paid ? '关闭' : '知道了'}
               </button>
             </div>
           </div>
         )}
-      </section>
-    </main>
+    </>
   )
 }

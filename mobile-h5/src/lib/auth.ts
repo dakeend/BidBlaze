@@ -1,45 +1,61 @@
+import { apiClient } from './api-client'
 import type { UserBrief } from './types'
 
 const tokenKey = 'auction_token'
 
-const seedUsersByToken: Record<string, UserBrief> = {
-  'mock-token-seller-001': {
-    id: 1,
-    nickname: '主播阿明',
-    avatar: null,
-  },
-  'mock-token-user-001': {
-    id: 2,
-    nickname: '买家张三',
-    avatar: null,
-  },
-  'mock-token-user-002': {
-    id: 3,
-    nickname: '买家李四',
-    avatar: null,
-  },
-}
-
 export function getAuthToken(): string {
-  // TODO(prod): replace with JWT or safer WS auth.
-  return localStorage.getItem(tokenKey) || 'mock-token-user-001'
+  return localStorage.getItem(tokenKey) || ''
 }
 
-export function getCurrentUserId(): number {
-  return getCurrentUser().id
+export function setAuthToken(token: string): void {
+  localStorage.setItem(tokenKey, token)
 }
 
-export function getCurrentUser(): UserBrief {
+export function clearAuthToken(): void {
+  localStorage.removeItem(tokenKey)
+}
+
+export function isLoggedIn(): boolean {
+  return !!getAuthToken()
+}
+
+let cachedUser: UserBrief | null = null
+
+export function getCurrentUser(): UserBrief | null {
+  return cachedUser
+}
+
+export async function login(nickname: string): Promise<{ token: string; user: UserBrief }> {
+  const response = await apiClient.post<{
+    code: number
+    msg: string
+    data: { token: string; user: UserBrief }
+  }>('/api/login', { nickname })
+  const data = response.data.data
+  setAuthToken(data.token)
+  cachedUser = data.user
+  return data
+}
+
+export async function fetchMe(): Promise<UserBrief | null> {
   const token = getAuthToken()
-  const seedUser = seedUsersByToken[token]
-  if (seedUser) {
-    return seedUser
+  if (!token) return null
+  try {
+    const response = await apiClient.get<{
+      code: number
+      msg: string
+      data: { user: UserBrief }
+    }>('/api/users/me')
+    cachedUser = response.data.data.user
+    return cachedUser
+  } catch {
+    clearAuthToken()
+    cachedUser = null
+    return null
   }
+}
 
-  const id = Number(token.match(/-(\d+)$/)?.[1] ?? 0)
-  return {
-    id: id > 0 ? id : 2,
-    nickname: token.includes('seller') ? '主播阿明' : '买家张三',
-    avatar: null,
-  }
+export function logout(): void {
+  clearAuthToken()
+  cachedUser = null
 }

@@ -14,9 +14,11 @@ type Hub struct {
 
 	roomsMu sync.RWMutex
 	rooms   map[int64]*Room
+
+	viewerSink ViewerCountSink
 }
 
-func NewHub(provider Provider) *Hub {
+func NewHub(provider Provider, viewerSink ViewerCountSink) *Hub {
 	if provider == nil {
 		provider = StaticProvider{}
 	}
@@ -27,6 +29,7 @@ func NewHub(provider Provider) *Hub {
 		unregister: make(chan *Client),
 		publish:    make(chan EventEnvelope, 256),
 		rooms:      make(map[int64]*Room),
+		viewerSink: viewerSink,
 	}
 }
 
@@ -112,7 +115,7 @@ func (h *Hub) room(ctx context.Context, auctionID int64) *Room {
 		return room
 	}
 
-	room = NewRoom(auctionID)
+	room = NewRoom(auctionID, h.viewerSink)
 	h.rooms[auctionID] = room
 	go room.Run(ctx)
 	return room

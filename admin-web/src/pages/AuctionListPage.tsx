@@ -94,7 +94,7 @@ export function AuctionListPage() {
       dataIndex: 'title',
       ellipsis: true,
       render: (t: string, r) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Typography.Text strong>{t}</Typography.Text>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
             #{r.id}

@@ -45,7 +45,7 @@ func TestHubRoomCreationIsConcurrentSafe(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	hub := NewHub(nil)
+	hub := NewHub(nil, nil)
 	const workers = 32
 	rooms := make(chan *Room, workers)
 
@@ -76,7 +76,7 @@ func TestHubPublishBroadcastsOnlyMatchingRoom(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	hub := NewHub(nil)
+	hub := NewHub(nil, nil)
 	go hub.Run(ctx)
 
 	roomOne := &Client{hub: hub, auctionID: 1, send: make(chan []byte, 8)}
@@ -106,7 +106,7 @@ func TestHubSendsViewerCountSoftEvent(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	hub := NewHub(nil)
+	hub := NewHub(nil, nil)
 	go hub.Run(ctx)
 
 	client := &Client{hub: hub, auctionID: 9, send: make(chan []byte, 8)}
@@ -146,7 +146,7 @@ func TestRoomStopsClientsOnContextCancel(t *testing.T) {
 }
 
 func TestReplayFallsBackToSnapshot(t *testing.T) {
-	hub := NewHub(nil)
+	hub := NewHub(nil, nil)
 	events := hub.replayOrSnapshot(context.Background(), 3, 99)
 	if len(events) != 1 {
 		t.Fatalf("expected one snapshot event, got %d", len(events))
@@ -157,7 +157,7 @@ func TestReplayFallsBackToSnapshot(t *testing.T) {
 }
 
 func TestReplayFallsBackToSnapshotWhenReplayHasMore(t *testing.T) {
-	hub := NewHub(&fakeProvider{
+	hub := NewHub(&fakeProvider{, nil
 		result: ReplayResult{
 			Events: []EventEnvelope{{
 				Type:       "bid_update",
@@ -186,7 +186,7 @@ func TestServeAuctionSendsSnapshotThenPong(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	hub := NewHub(nil)
+	hub := NewHub(nil, nil)
 	go hub.Run(ctx)
 
 	router := gin.New()
@@ -243,7 +243,7 @@ func TestServeEventsReturnsReplayResult(t *testing.T) {
 			HasMore: true,
 		},
 	}
-	hub := NewHub(provider)
+	hub := NewHub(provider, nil)
 
 	router := gin.New()
 	RegisterRoutes(router, hub)
@@ -286,7 +286,7 @@ func TestServeEventsRequiresAfterSeq(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	router := gin.New()
-	RegisterRoutes(router, NewHub(nil))
+	RegisterRoutes(router, NewHub(nil, nil))
 
 	request := httptest.NewRequest(http.MethodGet, "/api/auctions/1/events", nil)
 	recorder := httptest.NewRecorder()
@@ -301,7 +301,7 @@ func TestServeEventsStaticProviderRequestsSnapshot(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	router := gin.New()
-	RegisterRoutes(router, NewHub(nil))
+	RegisterRoutes(router, NewHub(nil, nil))
 
 	request := httptest.NewRequest(http.MethodGet, "/api/auctions/1/events?after_seq=10", nil)
 	recorder := httptest.NewRecorder()

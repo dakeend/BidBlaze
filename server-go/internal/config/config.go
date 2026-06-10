@@ -43,7 +43,7 @@ func Load() Config {
 		AppPort:      env("APP_PORT", "8080"),
 		AppTimezone:  env("APP_TIMEZONE", "Asia/Shanghai"),
 		Location:     location,
-		MySQLDSN:     env("MYSQL_DSN", "root:auction_root@tcp(127.0.0.1:3306)/auction?parseTime=true&loc=UTC&charset=utf8mb4"),
+		MySQLDSN:     env("MYSQL_DSN", "auction:auction_root@tcp(127.0.0.1:3306)/auction?parseTime=true&loc=Asia%2FShanghai&charset=utf8mb4"),
 		MySQLMaxOpen: envInt("MYSQL_MAX_OPEN", 50),
 		MySQLMaxIdle: envInt("MYSQL_MAX_IDLE", 10),
 		RedisAddr:    env("REDIS_ADDR", "127.0.0.1:6379"),

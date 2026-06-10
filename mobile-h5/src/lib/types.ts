@@ -118,3 +118,15 @@ export type UploadResult = {
 export type ConnectionState = 'connected' | 'reconnecting' | 'polling' | 'disconnected'
 
 export type BidButtonState = 'idle' | 'pending' | 'cooldown' | 'disabled'
+
+export type OrderListItem = {
+  id: number
+  auction_id: number
+  winner: UserBrief
+  seller: UserBrief
+  final_price: number
+  status: 'pending_pay' | 'paid' | 'closed'
+  created_at: string
+  updated_at: string
+  paid_at: string | null
+}

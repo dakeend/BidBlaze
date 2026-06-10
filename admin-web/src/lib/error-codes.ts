@@ -27,8 +27,12 @@ export const ERROR_CODES: Record<number, ErrorCodeMeta> = {
   9999: { message: '系统繁忙', hint: 'toast「系统繁忙」' },
 }
 
-/** 取错误码对应的中文提示；未知码回退到 9999 文案。 */
+/** 取错误码对应的中文提示；后端传了具体错误信息时优先使用。 */
 export function messageForCode(code: number, fallbackMsg?: string): string {
+  // 后端消息（如 dev 模式下注入的详细错误）优先于固定文案
+  if (fallbackMsg && code in ERROR_CODES && fallbackMsg !== ERROR_CODES[code].message) {
+    return fallbackMsg
+  }
   if (code in ERROR_CODES) return ERROR_CODES[code].message
   return fallbackMsg || ERROR_CODES[9999].message
 }
