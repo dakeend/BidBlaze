@@ -50,3 +50,6 @@ video/
 # deployment artifacts
 *.tar.gz
 *.zip
+
+# course/presentation materials (not for public repo)
+*.pdf
