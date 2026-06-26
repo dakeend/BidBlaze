@@ -41,3 +41,12 @@ node_modules.winbak*/
 # local uploads and videos
 server-go/uploads/
 video/
+
+# production env files with secrets
+.env.prod
+.env.production
+*/.env.production
+
+# deployment artifacts
+*.tar.gz
+*.zip

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
   Clock3,
@@ -15,7 +15,7 @@ import { useAuctionAlerts } from '../hooks/useAuctionAlerts'
 import { useAuctionSocket } from '../hooks/useAuctionSocket'
 import { useBidButton } from '../hooks/useBidButton'
 import { useServerTime } from '../hooks/useServerTime'
-import { ApiCallError, payOrder } from '../lib/api-client'
+import { ApiCallError, getAuctionStatus, payOrder } from '../lib/api-client'
 import { getCurrentUser } from '../lib/auth'
 import { formatMoney, formatRemaining, toServerMs } from '../lib/time'
 import { useAuctionStore } from '../store/auctionStore'
@@ -75,6 +75,29 @@ export function AuctionRoomPage({ auctionId, onBack }: AuctionRoomPageProps) {
   const { serverNow } = useServerTime(auctionId)
   const { lastError, reconnect } = useAuctionSocket(auctionId)
   const { buttonState, disabledReason, message, submitBid } = useBidButton(auctionId)
+
+  // 直拉拍卖数据 + 兜底轮询，彻底解决卡「加载拍卖中」的问题
+  const applySnapshot = useAuctionStore((s) => s.applySnapshot)
+  useEffect(() => {
+    let cancelled = false
+    let attempt = 0
+    const load = () => {
+      getAuctionStatus(auctionId)
+        .then((snap) => {
+          if (!cancelled) applySnapshot(snap)
+        })
+        .catch(() => {
+          // 失败后递增重试：0.3s, 0.6s, 1.2s, 2.4s...
+          if (!cancelled) {
+            attempt++
+            setTimeout(load, Math.min(300 * Math.pow(2, attempt), 5000))
+          }
+        })
+    }
+    load()
+    return () => { cancelled = true }
+  }, [auctionId, applySnapshot])
+
   const [remainingMs, setRemainingMs] = useState(0)
   const [bidAmount, setBidAmount] = useState<number | null>(null)
   const { alerts, criticalEnding, dismissAlert } = useAuctionAlerts({
@@ -176,7 +199,7 @@ export function AuctionRoomPage({ auctionId, onBack }: AuctionRoomPageProps) {
 
         <section className={`live-stage ${criticalEnding ? 'critical-ending' : ''}`}>
           {auction?.stream_url ? (
-            <video className="live-video" src={auction.stream_url} poster={heroImg} playsInline muted controls />
+            <video className="live-video" src={auction.stream_url} poster={heroImg} playsInline muted autoPlay />
           ) : (
             <div className="live-placeholder">
               <img src={heroImg} alt="拍卖商品直播占位画面" />

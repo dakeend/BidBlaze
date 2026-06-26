@@ -102,7 +102,7 @@ export function MonitorPage() {
       >
         <div style={{ position: 'relative', width: '100%', height: 320, background: '#1a1a2e', overflow: 'hidden' }}>
           {a.stream_url ? (
-            <video src={a.stream_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} playsInline muted controls />
+            <video src={a.stream_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} playsInline muted autoPlay loop controls />
           ) : (
             <>
               <img

@@ -1,0 +1,427 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: scripts/k6-perf-test.js
+        output: -
+
+     scenarios: (100.00%) 3 scenarios, 1205 max VUs, 1m35s max duration (incl. graceful stop):
+              * bid_stress: 200 looping VUs for 1m0s (exec: doBid, gracefulStop: 30s)
+              * ws_connections: Up to 1000 looping VUs for 50s over 3 stages (gracefulRampDown: 5s, exec: doWsHold, startTime: 5s, gracefulStop: 30s)
+              * ws_reconnect: 5 looping VUs for 1m0s (exec: doWsReconnect, startTime: 5s, gracefulStop: 30s)
+
+
+running (0m00.4s), 0200/1205 VUs, 0 complete and 0 interrupted iterations
+bid_stress       [   1% ] 200 VUs  0m00.4s/1m0s
+ws_connections • [   0% ] waiting  4.6s
+ws_reconnect   • [   0% ] waiting  4.6s
+
+running (0m01.4s), 0200/1205 VUs, 288 complete and 0 interrupted iterations
+bid_stress       [   2% ] 200 VUs  0m01.4s/1m0s
+ws_connections • [   0% ] waiting  3.6s
+ws_reconnect   • [   0% ] waiting  3.6s
+
+running (0m02.4s), 0200/1205 VUs, 730 complete and 0 interrupted iterations
+bid_stress       [   4% ] 200 VUs  0m02.4s/1m0s
+ws_connections • [   0% ] waiting  2.6s
+ws_reconnect   • [   0% ] waiting  2.6s
+
+running (0m03.4s), 0200/1205 VUs, 1144 complete and 0 interrupted iterations
+bid_stress       [   6% ] 200 VUs  0m03.4s/1m0s
+ws_connections • [   0% ] waiting  1.6s
+ws_reconnect   • [   0% ] waiting  1.6s
+
+running (0m04.4s), 0200/1205 VUs, 1503 complete and 0 interrupted iterations
+bid_stress       [   7% ] 200 VUs  0m04.4s/1m0s
+ws_connections • [   0% ] waiting  0.6s
+ws_reconnect   • [   0% ] waiting  0.6s
+
+running (0m05.4s), 0232/1205 VUs, 1967 complete and 0 interrupted iterations
+bid_stress       [   9% ] 200 VUs        0m05.4s/1m0s
+ws_connections   [   1% ] 0027/1000 VUs  00.4s/50.0s
+ws_reconnect     [   1% ] 5 VUs          0m00.4s/1m0s
+
+running (0m06.4s), 0298/1205 VUs, 2406 complete and 0 interrupted iterations
+bid_stress       [  11% ] 200 VUs        0m06.4s/1m0s
+ws_connections   [   3% ] 0093/1000 VUs  01.4s/50.0s
+ws_reconnect     [   2% ] 5 VUs          0m01.4s/1m0s
+
+running (0m07.4s), 0365/1205 VUs, 2830 complete and 0 interrupted iterations
+bid_stress       [  12% ] 200 VUs        0m07.4s/1m0s
+ws_connections   [   5% ] 0160/1000 VUs  02.4s/50.0s
+ws_reconnect     [   4% ] 5 VUs          0m02.4s/1m0s
+
+running (0m08.4s), 0432/1205 VUs, 3283 complete and 0 interrupted iterations
+bid_stress       [  14% ] 200 VUs        0m08.4s/1m0s
+ws_connections   [   7% ] 0227/1000 VUs  03.4s/50.0s
+ws_reconnect     [   6% ] 5 VUs          0m03.4s/1m0s
+
+running (0m09.4s), 0499/1205 VUs, 3745 complete and 0 interrupted iterations
+bid_stress       [  16% ] 200 VUs        0m09.4s/1m0s
+ws_connections   [   9% ] 0294/1000 VUs  04.4s/50.0s
+ws_reconnect     [   7% ] 5 VUs          0m04.4s/1m0s
+
+running (0m10.4s), 0565/1205 VUs, 4224 complete and 0 interrupted iterations
+bid_stress       [  17% ] 200 VUs        0m10.4s/1m0s
+ws_connections   [  11% ] 0360/1000 VUs  05.4s/50.0s
+ws_reconnect     [   9% ] 5 VUs          0m05.4s/1m0s
+
+running (0m11.4s), 0632/1205 VUs, 4698 complete and 0 interrupted iterations
+bid_stress       [  19% ] 200 VUs        0m11.4s/1m0s
+ws_connections   [  13% ] 0427/1000 VUs  06.4s/50.0s
+ws_reconnect     [  11% ] 5 VUs          0m06.4s/1m0s
+
+running (0m12.4s), 0698/1205 VUs, 5168 complete and 0 interrupted iterations
+bid_stress       [  21% ] 200 VUs        0m12.4s/1m0s
+ws_connections   [  15% ] 0493/1000 VUs  07.4s/50.0s
+ws_reconnect     [  12% ] 5 VUs          0m07.4s/1m0s
+
+running (0m13.4s), 0766/1205 VUs, 5613 complete and 0 interrupted iterations
+bid_stress       [  22% ] 200 VUs        0m13.4s/1m0s
+ws_connections   [  17% ] 0561/1000 VUs  08.4s/50.0s
+ws_reconnect     [  14% ] 5 VUs          0m08.4s/1m0s
+
+running (0m14.4s), 0832/1205 VUs, 6051 complete and 0 interrupted iterations
+bid_stress       [  24% ] 200 VUs        0m14.4s/1m0s
+ws_connections   [  19% ] 0627/1000 VUs  09.4s/50.0s
+ws_reconnect     [  16% ] 5 VUs          0m09.4s/1m0s
+
+running (0m15.4s), 0899/1205 VUs, 6479 complete and 0 interrupted iterations
+bid_stress       [  26% ] 200 VUs        0m15.4s/1m0s
+ws_connections   [  21% ] 0694/1000 VUs  10.4s/50.0s
+ws_reconnect     [  17% ] 5 VUs          0m10.4s/1m0s
+
+running (0m16.4s), 0964/1205 VUs, 6859 complete and 0 interrupted iterations
+bid_stress       [  27% ] 200 VUs        0m16.4s/1m0s
+ws_connections   [  23% ] 0759/1000 VUs  11.4s/50.0s
+ws_reconnect     [  19% ] 5 VUs          0m11.4s/1m0s
+
+running (0m17.5s), 1037/1205 VUs, 7332 complete and 0 interrupted iterations
+bid_stress       [  29% ] 200 VUs        0m17.5s/1m0s
+ws_connections   [  25% ] 0832/1000 VUs  12.5s/50.0s
+ws_reconnect     [  21% ] 5 VUs          0m12.5s/1m0s
+
+running (0m18.4s), 1099/1205 VUs, 7718 complete and 0 interrupted iterations
+bid_stress       [  31% ] 200 VUs        0m18.4s/1m0s
+ws_connections   [  27% ] 0894/1000 VUs  13.4s/50.0s
+ws_reconnect     [  22% ] 5 VUs          0m13.4s/1m0s
+
+running (0m19.4s), 1165/1205 VUs, 8161 complete and 0 interrupted iterations
+bid_stress       [  32% ] 200 VUs        0m19.4s/1m0s
+ws_connections   [  29% ] 0960/1000 VUs  14.4s/50.0s
+ws_reconnect     [  24% ] 5 VUs          0m14.4s/1m0s
+
+running (0m20.4s), 1205/1205 VUs, 8613 complete and 0 interrupted iterations
+bid_stress       [  34% ] 200 VUs        0m20.4s/1m0s
+ws_connections   [  31% ] 1000/1000 VUs  15.4s/50.0s
+ws_reconnect     [  26% ] 5 VUs          0m15.4s/1m0s
+
+running (0m21.5s), 1205/1205 VUs, 9046 complete and 0 interrupted iterations
+bid_stress       [  36% ] 200 VUs        0m21.5s/1m0s
+ws_connections   [  33% ] 1000/1000 VUs  16.5s/50.0s
+ws_reconnect     [  27% ] 5 VUs          0m16.5s/1m0s
+
+running (0m22.4s), 1205/1205 VUs, 9372 complete and 0 interrupted iterations
+bid_stress       [  37% ] 200 VUs        0m22.4s/1m0s
+ws_connections   [  35% ] 1000/1000 VUs  17.4s/50.0s
+ws_reconnect     [  29% ] 5 VUs          0m17.4s/1m0s
+
+running (0m23.4s), 1205/1205 VUs, 9820 complete and 0 interrupted iterations
+bid_stress       [  39% ] 200 VUs        0m23.4s/1m0s
+ws_connections   [  37% ] 1000/1000 VUs  18.4s/50.0s
+ws_reconnect     [  31% ] 5 VUs          0m18.4s/1m0s
+
+running (0m24.4s), 1205/1205 VUs, 10263 complete and 0 interrupted iterations
+bid_stress       [  41% ] 200 VUs        0m24.4s/1m0s
+ws_connections   [  39% ] 1000/1000 VUs  19.4s/50.0s
+ws_reconnect     [  32% ] 5 VUs          0m19.4s/1m0s
+
+running (0m25.4s), 1205/1205 VUs, 10535 complete and 0 interrupted iterations
+bid_stress       [  42% ] 200 VUs        0m25.4s/1m0s
+ws_connections   [  41% ] 1000/1000 VUs  20.4s/50.0s
+ws_reconnect     [  34% ] 5 VUs          0m20.4s/1m0s
+
+running (0m26.5s), 1205/1205 VUs, 10947 complete and 0 interrupted iterations
+bid_stress       [  44% ] 200 VUs        0m26.4s/1m0s
+ws_connections   [  43% ] 1000/1000 VUs  21.4s/50.0s
+ws_reconnect     [  36% ] 5 VUs          0m21.4s/1m0s
+
+running (0m27.4s), 1205/1205 VUs, 11378 complete and 0 interrupted iterations
+bid_stress       [  46% ] 200 VUs        0m27.4s/1m0s
+ws_connections   [  45% ] 1000/1000 VUs  22.4s/50.0s
+ws_reconnect     [  37% ] 5 VUs          0m22.4s/1m0s
+
+running (0m28.4s), 1205/1205 VUs, 11728 complete and 0 interrupted iterations
+bid_stress       [  47% ] 200 VUs        0m28.4s/1m0s
+ws_connections   [  47% ] 1000/1000 VUs  23.4s/50.0s
+ws_reconnect     [  39% ] 5 VUs          0m23.4s/1m0s
+
+running (0m29.4s), 1205/1205 VUs, 12157 complete and 0 interrupted iterations
+bid_stress       [  49% ] 200 VUs        0m29.4s/1m0s
+ws_connections   [  49% ] 1000/1000 VUs  24.4s/50.0s
+ws_reconnect     [  41% ] 5 VUs          0m24.4s/1m0s
+
+running (0m30.4s), 1205/1205 VUs, 12638 complete and 0 interrupted iterations
+bid_stress       [  51% ] 200 VUs        0m30.4s/1m0s
+ws_connections   [  51% ] 1000/1000 VUs  25.4s/50.0s
+ws_reconnect     [  42% ] 5 VUs          0m25.4s/1m0s
+
+running (0m31.4s), 1205/1205 VUs, 13043 complete and 0 interrupted iterations
+bid_stress       [  52% ] 200 VUs        0m31.4s/1m0s
+ws_connections   [  53% ] 1000/1000 VUs  26.4s/50.0s
+ws_reconnect     [  44% ] 5 VUs          0m26.4s/1m0s
+
+running (0m32.4s), 1205/1205 VUs, 13420 complete and 0 interrupted iterations
+bid_stress       [  54% ] 200 VUs        0m32.4s/1m0s
+ws_connections   [  55% ] 1000/1000 VUs  27.4s/50.0s
+ws_reconnect     [  46% ] 5 VUs          0m27.4s/1m0s
+
+running (0m33.4s), 1205/1205 VUs, 13826 complete and 0 interrupted iterations
+bid_stress       [  56% ] 200 VUs        0m33.4s/1m0s
+ws_connections   [  57% ] 1000/1000 VUs  28.4s/50.0s
+ws_reconnect     [  47% ] 5 VUs          0m28.4s/1m0s
+
+running (0m34.5s), 1205/1205 VUs, 14281 complete and 0 interrupted iterations
+bid_stress       [  57% ] 200 VUs        0m34.5s/1m0s
+ws_connections   [  59% ] 1000/1000 VUs  29.5s/50.0s
+ws_reconnect     [  49% ] 5 VUs          0m29.5s/1m0s
+
+running (0m35.4s), 1205/1205 VUs, 14724 complete and 0 interrupted iterations
+bid_stress       [  59% ] 200 VUs        0m35.4s/1m0s
+ws_connections   [  61% ] 1000/1000 VUs  30.4s/50.0s
+ws_reconnect     [  51% ] 5 VUs          0m30.4s/1m0s
+
+running (0m36.4s), 1205/1205 VUs, 15157 complete and 0 interrupted iterations
+bid_stress       [  61% ] 200 VUs        0m36.4s/1m0s
+ws_connections   [  63% ] 1000/1000 VUs  31.4s/50.0s
+ws_reconnect     [  52% ] 5 VUs          0m31.4s/1m0s
+
+running (0m37.4s), 1205/1205 VUs, 15601 complete and 0 interrupted iterations
+bid_stress       [  62% ] 200 VUs        0m37.4s/1m0s
+ws_connections   [  65% ] 1000/1000 VUs  32.4s/50.0s
+ws_reconnect     [  54% ] 5 VUs          0m32.4s/1m0s
+
+running (0m38.4s), 1205/1205 VUs, 15889 complete and 0 interrupted iterations
+bid_stress       [  64% ] 200 VUs        0m38.4s/1m0s
+ws_connections   [  67% ] 1000/1000 VUs  33.4s/50.0s
+ws_reconnect     [  56% ] 5 VUs          0m33.4s/1m0s
+
+running (0m39.4s), 1205/1205 VUs, 16343 complete and 0 interrupted iterations
+bid_stress       [  66% ] 200 VUs        0m39.4s/1m0s
+ws_connections   [  69% ] 1000/1000 VUs  34.4s/50.0s
+ws_reconnect     [  57% ] 5 VUs          0m34.4s/1m0s
+
+running (0m40.5s), 1205/1205 VUs, 16788 complete and 0 interrupted iterations
+bid_stress       [  68% ] 200 VUs        0m40.5s/1m0s
+ws_connections   [  71% ] 1000/1000 VUs  35.5s/50.0s
+ws_reconnect     [  59% ] 5 VUs          0m35.5s/1m0s
+
+running (0m41.4s), 1205/1205 VUs, 17115 complete and 0 interrupted iterations
+bid_stress       [  69% ] 200 VUs        0m41.4s/1m0s
+ws_connections   [  73% ] 1000/1000 VUs  36.4s/50.0s
+ws_reconnect     [  61% ] 5 VUs          0m36.4s/1m0s
+
+running (0m42.4s), 1205/1205 VUs, 17526 complete and 0 interrupted iterations
+bid_stress       [  71% ] 200 VUs        0m42.4s/1m0s
+ws_connections   [  75% ] 1000/1000 VUs  37.4s/50.0s
+ws_reconnect     [  62% ] 5 VUs          0m37.4s/1m0s
+
+running (0m43.4s), 1205/1205 VUs, 17962 complete and 0 interrupted iterations
+bid_stress       [  72% ] 200 VUs        0m43.4s/1m0s
+ws_connections   [  77% ] 1000/1000 VUs  38.4s/50.0s
+ws_reconnect     [  64% ] 5 VUs          0m38.4s/1m0s
+
+running (0m44.4s), 1205/1205 VUs, 18378 complete and 0 interrupted iterations
+bid_stress       [  74% ] 200 VUs        0m44.4s/1m0s
+ws_connections   [  79% ] 1000/1000 VUs  39.4s/50.0s
+ws_reconnect     [  66% ] 5 VUs          0m39.4s/1m0s
+
+running (0m45.4s), 1205/1205 VUs, 18758 complete and 0 interrupted iterations
+bid_stress       [  76% ] 200 VUs        0m45.4s/1m0s
+ws_connections   [  81% ] 1000/1000 VUs  40.4s/50.0s
+ws_reconnect     [  67% ] 5 VUs          0m40.4s/1m0s
+
+running (0m46.4s), 1205/1205 VUs, 19229 complete and 0 interrupted iterations
+bid_stress       [  77% ] 200 VUs        0m46.4s/1m0s
+ws_connections   [  83% ] 1000/1000 VUs  41.4s/50.0s
+ws_reconnect     [  69% ] 5 VUs          0m41.4s/1m0s
+
+running (0m47.4s), 1205/1205 VUs, 19713 complete and 0 interrupted iterations
+bid_stress       [  79% ] 200 VUs        0m47.4s/1m0s
+ws_connections   [  85% ] 1000/1000 VUs  42.4s/50.0s
+ws_reconnect     [  71% ] 5 VUs          0m42.4s/1m0s
+
+running (0m48.4s), 1205/1205 VUs, 20128 complete and 0 interrupted iterations
+bid_stress       [  81% ] 200 VUs        0m48.4s/1m0s
+ws_connections   [  87% ] 1000/1000 VUs  43.4s/50.0s
+ws_reconnect     [  72% ] 5 VUs          0m43.4s/1m0s
+
+running (0m49.4s), 1205/1205 VUs, 20565 complete and 0 interrupted iterations
+bid_stress       [  82% ] 200 VUs        0m49.4s/1m0s
+ws_connections   [  89% ] 1000/1000 VUs  44.4s/50.0s
+ws_reconnect     [  74% ] 5 VUs          0m44.4s/1m0s
+
+running (0m50.4s), 1205/1205 VUs, 21037 complete and 0 interrupted iterations
+bid_stress       [  84% ] 200 VUs        0m50.4s/1m0s
+ws_connections   [  91% ] 1000/1000 VUs  45.4s/50.0s
+ws_reconnect     [  76% ] 5 VUs          0m45.4s/1m0s
+
+running (0m51.5s), 1205/1205 VUs, 21555 complete and 0 interrupted iterations
+bid_stress       [  86% ] 200 VUs        0m51.5s/1m0s
+ws_connections   [  93% ] 1000/1000 VUs  46.5s/50.0s
+ws_reconnect     [  78% ] 5 VUs          0m46.5s/1m0s
+
+running (0m52.4s), 1205/1205 VUs, 21904 complete and 0 interrupted iterations
+bid_stress       [  87% ] 200 VUs        0m52.4s/1m0s
+ws_connections   [  95% ] 1000/1000 VUs  47.4s/50.0s
+ws_reconnect     [  79% ] 5 VUs          0m47.4s/1m0s
+
+running (0m53.4s), 1144/1205 VUs, 22392 complete and 0 interrupted iterations
+bid_stress       [  89% ] 200 VUs        0m53.4s/1m0s
+ws_connections   [  97% ] 0939/1000 VUs  48.4s/50.0s
+ws_reconnect     [  81% ] 5 VUs          0m48.4s/1m0s
+
+running (0m54.4s), 1078/1205 VUs, 22916 complete and 0 interrupted iterations
+bid_stress       [  91% ] 200 VUs        0m54.4s/1m0s
+ws_connections   [  99% ] 0873/1000 VUs  49.4s/50.0s
+ws_reconnect     [  82% ] 5 VUs          0m49.4s/1m0s
+
+running (0m55.4s), 0930/1205 VUs, 23449 complete and 82 interrupted iterations
+bid_stress       [  92% ] 200 VUs        0m55.4s/1m0s
+ws_connections ↓ [ 100% ] 0825/1000 VUs  50s
+ws_reconnect     [  84% ] 5 VUs          0m50.4s/1m0s
+
+running (0m56.4s), 0704/1205 VUs, 23947 complete and 251 interrupted iterations
+bid_stress       [  94% ] 200 VUs        0m56.4s/1m0s
+ws_connections ↓ [ 100% ] 0825/1000 VUs  50s
+ws_reconnect     [  86% ] 5 VUs          0m51.4s/1m0s
+
+running (0m57.4s), 0704/1205 VUs, 24409 complete and 251 interrupted iterations
+bid_stress       [  96% ] 200 VUs        0m57.4s/1m0s
+ws_connections ↓ [ 100% ] 0825/1000 VUs  50s
+ws_reconnect     [  87% ] 5 VUs          0m52.4s/1m0s
+
+running (0m58.4s), 0523/1205 VUs, 24848 complete and 432 interrupted iterations
+bid_stress       [  97% ] 200 VUs        0m58.4s/1m0s
+ws_connections ↓ [ 100% ] 0825/1000 VUs  50s
+ws_reconnect     [  89% ] 5 VUs          0m53.4s/1m0s
+
+running (0m59.4s), 0323/1205 VUs, 25305 complete and 632 interrupted iterations
+bid_stress       [  99% ] 200 VUs        0m59.4s/1m0s
+ws_connections ↓ [ 100% ] 0825/1000 VUs  50s
+ws_reconnect     [  91% ] 5 VUs          0m54.4s/1m0s
+
+running (1m00.4s), 0080/1205 VUs, 25619 complete and 750 interrupted iterations
+bid_stress     ↓ [ 100% ] 200 VUs        1m0s
+ws_connections ✓ [ 100% ] 0004/1000 VUs  50s
+ws_reconnect     [  92% ] 5 VUs          0m55.4s/1m0s
+
+running (1m01.4s), 0005/1205 VUs, 25694 complete and 750 interrupted iterations
+bid_stress     ✓ [ 100% ] 200 VUs        1m0s
+ws_connections ✓ [ 100% ] 0004/1000 VUs  50s
+ws_reconnect     [  94% ] 5 VUs          0m56.4s/1m0s
+
+running (1m02.4s), 0005/1205 VUs, 25694 complete and 750 interrupted iterations
+bid_stress     ✓ [ 100% ] 200 VUs        1m0s
+ws_connections ✓ [ 100% ] 0004/1000 VUs  50s
+ws_reconnect     [  96% ] 5 VUs          0m57.4s/1m0s
+
+running (1m03.4s), 0005/1205 VUs, 25699 complete and 750 interrupted iterations
+bid_stress     ✓ [ 100% ] 200 VUs        1m0s
+ws_connections ✓ [ 100% ] 0004/1000 VUs  50s
+ws_reconnect     [  97% ] 5 VUs          0m58.4s/1m0s
+
+running (1m04.4s), 0005/1205 VUs, 25699 complete and 750 interrupted iterations
+bid_stress     ✓ [ 100% ] 200 VUs        1m0s
+ws_connections ✓ [ 100% ] 0004/1000 VUs  50s
+ws_reconnect     [  99% ] 5 VUs          0m59.4s/1m0s
+
+running (1m05.4s), 0005/1205 VUs, 25699 complete and 750 interrupted iterations
+bid_stress     ✓ [ 100% ] 200 VUs        1m0s
+ws_connections ✓ [ 100% ] 0004/1000 VUs  50s
+ws_reconnect   ↓ [ 100% ] 5 VUs          1m0s
+
+running (1m06.4s), 0005/1205 VUs, 25699 complete and 750 interrupted iterations
+bid_stress     ✓ [ 100% ] 200 VUs        1m0s
+ws_connections ✓ [ 100% ] 0004/1000 VUs  50s
+ws_reconnect   ↓ [ 100% ] 5 VUs          1m0s
+
+running (1m07.4s), 0005/1205 VUs, 25699 complete and 750 interrupted iterations
+bid_stress     ✓ [ 100% ] 200 VUs        1m0s
+ws_connections ✓ [ 100% ] 0004/1000 VUs  50s
+ws_reconnect   ↓ [ 100% ] 5 VUs          1m0s
+time="2026-06-10T15:49:30+08:00" level=info msg="[teardown] 拍卖最终价: 67000, 出价次数: 279" source=console
+
+
+  █ THRESHOLDS 
+
+    bid_latency_ms
+    ✓ 'p(95)<200' p(95)=153ms
+    ✓ 'p(99)<500' p(99)=240ms
+
+    duplicate_order_count
+    ✓ 'count==0' count=0
+
+    price_non_monotonic_count
+    ✓ 'count==0' count=0
+
+    ws_reconnect_snapshot_ms
+    ✓ 'p(95)<3000' p(95)=54.19ms
+
+    ws_snapshot_latency_ms
+    ✓ 'p(95)<1000' p(95)=107ms
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 25704   377.328192/s
+    checks_succeeded...: 100.00% 25704 out of 25704
+    checks_failed......: 0.00%   0 out of 25704
+
+    ✓ bid: HTTP 不为 5xx
+    ✓ ws 重连: 快照已恢复
+    ✓ ws: 握手成功
+
+    CUSTOM
+    bid_conflict_count.............: 22144  325.068296/s
+    bid_latency_ms.................: min=1ms      avg=58.26ms med=45ms     p(90)=122ms    p(95)=153ms    p(99)=240ms    max=1.38s    count=24890
+    bid_success_count..............: 279    4.095649/s
+    duplicate_order_count..........: 0      0/s
+    price_non_monotonic_count......: 0      0/s
+
+    HTTP
+    http_req_duration..............: min=1.43ms   avg=62.25ms med=47.34ms  p(90)=131.82ms p(95)=170.11ms p(99)=271.78ms max=1.38s    count=49781
+      { expected_response:true }...: min=1.43ms   avg=68.99ms med=52.47ms  p(90)=145.71ms p(95)=192.11ms p(99)=323.41ms max=1.38s    count=27637
+    http_req_failed................: 44.48% 22144 out of 49781
+    http_reqs......................: 49781  730.772438/s
+
+    EXECUTION
+    iteration_duration.............: min=354.58ms avg=1.64s   med=473.95ms p(90)=632.09ms p(95)=751.72ms p(99)=40.02s   max=40.37s   count=25704
+    iterations.....................: 25704  377.328192/s
+    vus............................: 5      min=5              max=1205
+    vus_max........................: 1205   min=1205           max=1205
+
+    NETWORK
+    data_received..................: 169 MB 2.5 MB/s
+    data_sent......................: 9.9 MB 145 kB/s
+
+    WEBSOCKET
+    ws_connecting..................: min=289.1µs  avg=13.25ms med=4.71ms   p(90)=31.94ms  p(95)=48.48ms  p(99)=122.09ms max=367.71ms count=1629 
+    ws_msgs_received...............: 200486 2943.083566/s
+    ws_reconnect_snapshot_ms.......: min=2ms      avg=16.39ms med=8ms      p(90)=45.8ms   p(95)=54.19ms  p(99)=59.08ms  max=61ms     count=65   
+    ws_session_duration............: min=502.89ms avg=34.29s  med=40s      p(90)=40.05s   p(95)=40.07s   p(99)=40.19s   max=40.37s   count=879  
+    ws_sessions....................: 1629   23.913306/s
+    ws_snapshot_latency_ms.........: min=1ms      avg=31.94ms med=20ms     p(90)=73ms     p(95)=107ms    p(99)=171.05ms max=390ms    count=1499 
+
+
+
+
+running (1m08.1s), 0000/1205 VUs, 25704 complete and 750 interrupted iterations
+bid_stress     ✓ [ 100% ] 200 VUs        1m0s
+ws_connections ✓ [ 100% ] 0004/1000 VUs  50s
+ws_reconnect   ✓ [ 100% ] 5 VUs          1m0s

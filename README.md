@@ -1,4 +1,6 @@
-# Auction System
+# BidBlaze
+
+> AI-powered live streaming auction platform for e-commerce
 
 直播电商实时竞拍系统，包含 Go 后端、移动端 H5、PC 商家后台、MySQL、Redis 和项目文档。
 

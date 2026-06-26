@@ -12,9 +12,14 @@ export function useServerTime(auctionId: number) {
   }, [])
 
   const refresh = useCallback(async () => {
-    const snapshot = await getAuctionStatus(auctionId)
-    calibrate(snapshot.server_time)
-    return snapshot
+    if (!auctionId || auctionId <= 0) return
+    try {
+      const snapshot = await getAuctionStatus(auctionId)
+      calibrate(snapshot.server_time)
+      return snapshot
+    } catch {
+      // 静默失败，不影响页面渲染
+    }
   }, [auctionId, calibrate])
 
   const serverNow = useCallback(() => Date.now() + serverOffset, [serverOffset])
